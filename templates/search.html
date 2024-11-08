@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2 class="text-center mb-4">Risultati Ricerca</h2>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Produttore</th>
+            <th>Impianto Destinazione</th>
+            <th>Indirizzo Cantiere</th>
+            <th>Codice EER</th>
+            <th>Data Invio</th>
+            <th>Data Accettazione</th>
+            <th>Data Scadenza</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for doc in documenti %}
+        <tr>
+            <td>{{ doc['nome_produttore'] }}</td>
+            <td>{{ doc['impianto_destinazione'] }}</td>
+            <td>{{ doc['indirizzo_cantiere'] }}</td>
+            <td>{{ doc['codice_eer'] }}</td>
+            <td>{{ doc['data_invio'] }}</td>
+            <td>{{ doc['data_accettazione'] }}</td>
+            <td>{{ doc['data_scadenza'] }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
