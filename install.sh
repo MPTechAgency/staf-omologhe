@@ -1,66 +1,43 @@
 #!/bin/bash
 
-# Script di installazione per un'applicazione Flask
+echo "🛠️  Inizio installazione dei pacchetti necessari..."
 
-echo "🛠️  Inizio dell'installazione..."
+# Aggiornamento dei repository
+sudo apt-get update
 
-# Funzione per installare un pacchetto se non è già installato
-install_if_missing() {
-    PACKAGE=$1
-    if ! dpkg -s "$PACKAGE" &> /dev/null; then
-        echo "📦 Installazione di $PACKAGE..."
-        sudo apt update
-        sudo apt install -y "$PACKAGE"
-    else
-        echo "✅ $PACKAGE è già installato."
-    fi
-}
+# Installazione dei pacchetti necessari
+sudo apt-get install -y python3 python3-pip python3-venv
 
-# Verifica se Python è installato
-if ! command -v python3 &> /dev/null; then
-    echo "❌ Python3 non è installato. Installalo prima di procedere."
-    exit 1
-else
-    echo "✅ Python3 è già installato."
-fi
+# Installazione di Flask e altre dipendenze Python
+pip3 install --user flask flask_sqlalchemy flask_login flask_bcrypt
 
-# Verifica se pip è installato
-if ! command -v pip3 &> /dev/null; then
-    echo "❌ pip3 non è installato. Installazione in corso..."
-    sudo apt update
-    sudo apt install -y python3-pip
-else
-    echo "✅ pip3 è già installato."
-fi
+# Pulizia dei pacchetti inutilizzati
+sudo apt-get autoremove -y
 
-# Verifica se il modulo venv è installato
-if ! python3 -m venv --help &> /dev/null; then
-    echo "❌ python3-venv non è installato. Installazione in corso..."
-    sudo apt update
-    sudo apt install -y python3-venv
-else
-    echo "✅ python3-venv è già installato."
-fi
+echo "🎉 Installazione completata con successo!"
 
-# Crea un ambiente virtuale
+# Creazione di un ambiente virtuale (opzionale ma consigliato)
 if [ ! -d "venv" ]; then
-    echo "🐍 Creazione dell'ambiente virtuale..."
+    echo "🛠️  Creazione di un ambiente virtuale..."
     python3 -m venv venv
-else
-    echo "✅ L'ambiente virtuale esiste già."
 fi
 
-# Attiva l'ambiente virtuale
-echo "✅ Attivazione dell'ambiente virtuale..."
+# Attivazione dell'ambiente virtuale
 source venv/bin/activate
 
-# Aggiorna pip
-echo "⬆️  Aggiornamento di pip..."
-pip install --upgrade pip
-
-# Installa i pacchetti dai requirements.txt
+# Installazione delle dipendenze specificate nel requirements.txt (se presente)
 if [ -f "requirements.txt" ]; then
-    echo "📦 Installazione dei pacchetti da requirements.txt..."
+    echo "📦 Installazione delle dipendenze dal requirements.txt..."
     pip install -r requirements.txt
-else
-    echo "❌ Il file requirements
+fi
+
+# Richiesta dell'indirizzo IP privato dell'utente
+PRIVATE_IP=$(hostname -I | awk '{print $1}')
+echo "🔍 Trovato IP privato: $PRIVATE_IP"
+
+# Modifica il file app.py per avviare l'app sul proprio IP
+echo "🚀 Avvio dell'applicazione Flask su $PRIVATE_IP:5000..."
+
+# Avvio dell'applicazione Flask con l'IP privato
+FLASK_APP=app.py flask run --host="$PRIVATE_IP" --port=5000
+
