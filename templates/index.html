@@ -1,65 +1,53 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagina Principale</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            text-align: center;
+            padding: 50px;
+        }
+        h1 {
+            margin-bottom: 30px;
+            color: #333;
+        }
+        .button {
+            display: inline-block;
+            padding: 15px 30px;
+            margin: 10px;
+            font-size: 18px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
 
-{% block content %}
-<h2 class="text-center mb-4">Lista Omologhe</h2>
+<div class="container">
+    <h1>Benvenuto nel sistema di gestione documenti</h1>
 
-<!-- Pulsante per aggiungere un nuovo documento -->
-<a href="/add" class="btn btn-primary mb-3">Aggiungi Omologa</a>
+    <a href="{{ url_for('lista_omologhe') }}" class="button">Lista Omologhe</a><br>
+    <a href="{{ url_for('aggiungi_omologa') }}" class="button">Aggiungi Omologa</a><br>
+    <a href="{{ url_for('lista_produttori') }}" class="button">Lista Produttori</a><br>
+    <a href="{{ url_for('aggiungi_produttore') }}" class="button">Aggiungi Produttore</a><br>
+    <a href="{{ url_for('lista_impianti') }}" class="button">Lista Impianti</a><br>
+    <a href="{{ url_for('aggiungi_impianto') }}" class="button">Aggiungi Impianto</a><br>
 
-<!-- Form di ricerca -->
-<form action="/search" method="get" class="mb-4">
-    <div class="input-group">
-        <input type="text" class="form-control" name="query" placeholder="Cerca per nome o codice EER">
-        <button type="submit" class="btn btn-secondary">Cerca</button>
-    </div>
-</form>
+</div>
 
-<!-- Form per eliminare i documenti selezionati -->
-<form action="/delete" method="post">
-    <div class="mb-3">
-        <button type="submit" class="btn btn-danger">Elimina Selezionati</button>
-    </div>
-
-    <!-- Tabella documenti -->
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th><input type="checkbox" id="select-all"></th> <!-- Colonna per selezionare tutti -->
-                <th>Produttore</th>
-                <th>Impianto Destinazione</th>
-                <th>Indirizzo Cantiere</th>
-                <th>Codice EER</th>
-                <th>Data Invio</th>
-                <th>Data Accettazione</th>
-                <th>Data Scadenza</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for doc in documenti %}
-            <tr>
-                <td><input type="checkbox" name="document_ids" value="{{ doc['id'] }}"></td>
-                <!-- Selezione documento -->
-                <td>{{ doc['nome_produttore'] }}</td>
-                <td>{{ doc['impianto_destinazione'] }}</td>
-                <td>{{ doc['indirizzo_cantiere'] }}</td>
-                <td>{{ doc['codice_eer'] }}</td>
-                <td>{{ doc['data_invio'] }}</td>
-                <td>{{ doc['data_accettazione'] }}</td>
-                <td>{{ doc['data_scadenza'] }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</form>
-
-{% endblock %}
-
-<script>
-    // Selezionare/deselezionare tutti i checkbox
-    document.getElementById('select-all').addEventListener('click', function (e) {
-        let checkboxes = document.querySelectorAll('input[name="document_ids"]');
-        checkboxes.forEach(function (checkbox) {
-            checkbox.checked = e.target.checked;
-        });
-    });
-</script>
+</body>
+</html>

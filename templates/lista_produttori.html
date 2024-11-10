@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista Produttori</title>
+</head>
+<body>
+
+<h1>Lista Produttori</h1>
+
+<table border="1">
+    <thead>
+        <tr>
+            <th>Nome Produttore</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for produttore in produttori %}
+        <tr>
+            <td>{{ produttore.nome_produttore }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+</body>
+</html>

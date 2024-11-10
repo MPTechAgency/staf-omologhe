@@ -1,0 +1,44 @@
+<form method="POST" action="{{ url_for('aggiungi_omologa') }}">
+    <div>
+        <label for="nome_produttore">Produttore</label>
+        <select name="nome_produttore" id="nome_produttore" required>
+            <option value="">Seleziona un produttore</option>
+            {% for produttore in produttori %}
+                <option value="{{ produttore['nome_produttore'] }}">{{ produttore['nome_produttore'] }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    
+    <div>
+        <label for="impianto_destinazione">Impianto</label>
+        <select name="impianto_destinazione" id="impianto_destinazione" required>
+            <option value="">Seleziona un impianto</option>
+            {% for impianto in impianti %}
+                <option value="{{ impianto['nome_impianto'] }}">{{ impianto['nome_impianto'] }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    
+    <!-- Aggiungi gli altri campi del form come richiesto -->
+    <div>
+        <label for="indirizzo_cantiere">Indirizzo Cantiere</label>
+        <input type="text" name="indirizzo_cantiere" required>
+    </div>
+    
+    <div>
+        <label for="codice_eer">Codice EER</label>
+        <input type="text" name="codice_eer" required>
+    </div>
+    
+    <div>
+        <label for="data_invio">Data Invio</label>
+        <input type="date" name="data_invio" required>
+    </div>
+    
+    <div>
+        <label for="data_accettazione">Data Accettazione</label>
+        <input type="date" name="data_accettazione" required>
+    </div>
+    
+    <button type="submit">Aggiungi Omologa</button>
+</form>
