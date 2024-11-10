@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista Omologhe</title>
+    <script>
+        // Function to toggle the selection of all checkboxes
+        function toggleSelectAll(source) {
+            const checkboxes = document.querySelectorAll('.document-checkbox');
+            checkboxes.forEach((checkbox) => {
+                checkbox.checked = source.checked;
+            });
+        }
+    </script>
+</head>
+<body>
+
+<h1>Lista Omologhe</h1>
+
+<form method="POST" action="{{ url_for('delete_documents') }}">
+    <table border="1">
+        <thead>
+            <tr>
+                <th><input type="checkbox" onclick="toggleSelectAll(this)"></th>
+                <th>Nome Produttore</th>
+                <th>Impianto Destinazione</th>
+                <th>Indirizzo Cantiere</th>
+                <th>Codice EER</th>
+                <th>Data Invio</th>
+                <th>Data Accettazione</th>
+                <th>Data Scadenza</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for documento in documenti %}
+            <tr>
+                <td><input type="checkbox" name="document_ids" value="{{ documento.id }}" class="document-checkbox"></td>
+                <td>{{ documento.nome_produttore }}</td>
+                <td>{{ documento.impianto_destinazione }}</td>
+                <td>{{ documento.indirizzo_cantiere }}</td>
+                <td>{{ documento.codice_eer }}</td>
+                <td>{{ documento.data_invio }}</td>
+                <td>{{ documento.data_accettazione }}</td>
+                <td>{{ documento.data_scadenza }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <br>
+
+    <button type="submit">Elimina Selezionati</button>
+</form>
+
+</body>
+</html>

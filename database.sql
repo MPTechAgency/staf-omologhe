@@ -14,9 +14,8 @@ CREATE TABLE produttori (
     nome TEXT UNIQUE NOT NULL
 );
 
--- Tabella Impianti
 CREATE TABLE impianti (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nome TEXT UNIQUE NOT NULL,
-    indirizzo TEXT
+    nome_impianto TEXT NOT NULL,
+    indirizzo_impianto TEXT NOT NULL
 );
