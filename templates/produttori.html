@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2 class="text-center mb-4">Lista Produttori</h2>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Produttore</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for produttore in produttori %}
+        <tr>
+            <td>{{ produttore['nome_produttore'] }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<a href="/" class="btn btn-secondary mt-3">Torna alla Home</a>
+{% endblock %}

@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+import ssl
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -18,29 +19,25 @@ def get_db_connection():
 
 # Calcolo automatico della data di scadenza (365 giorni dopo la data di accettazione)
 def calcola_data_scadenza(data_accettazione):
-    return datetime.strptime(data_accettazione, '%Y-%m-%d') + timedelta(days=365)
+    scadenza = datetime.strptime(data_accettazione, '%Y-%m-%d') + timedelta(days=365)
+    return scadenza.strftime('%Y-%m-%d')  # Restituisce solo la data nel formato 'YYYY-MM-DD'
+
 
 # Funzione per inviare l'email di notifica
 def send_email(subject, body):
     try:
-        # Configurazione del server SMTP (Gmail come esempio)
-        sender_email = "test@test.it"  # Email mittente
-        receiver_email = "test-invio@test.it"  # Email destinatario
-        password = "Password-test"  # Password dell'app (non quella dell'account Google)
+        sender_email = "test@test.it"
+        receiver_email = "test-invio@test.it"
+        password = "Password-test"
 
-        # Creazione del messaggio
         msg = MIMEMultipart()
         msg['From'] = sender_email
         msg['To'] = receiver_email
         msg['Subject'] = subject
-
         msg.attach(MIMEText(body, 'plain'))
 
-        # Connessione al server SMTP di Gmail
         server = smtplib.SMTP_SSL('mx.test.it', 465)
         server.login(sender_email, password)
-
-        # Inviare l'email
         server.sendmail(sender_email, receiver_email, msg.as_string())
         server.quit()
 
@@ -78,25 +75,68 @@ def add_document():
     
     return render_template('form.html')
 
+# Pagina con la lista dei Produttori
+@app.route('/produttori')
+def produttori():
+    conn = get_db_connection()
+    produttori = conn.execute('SELECT DISTINCT nome_produttore FROM documenti').fetchall()
+    conn.close()
+    return render_template('produttori.html', produttori=produttori)
+
+# Pagina con la lista degli Impianti
+@app.route('/impianti')
+def impianti():
+    conn = get_db_connection()
+    impianti = conn.execute('SELECT DISTINCT impianto_destinazione FROM documenti').fetchall()
+    conn.close()
+    return render_template('impianti.html', impianti=impianti)
+
+# Modifica un documento esistente
+@app.route('/edit/<int:document_id>', methods=['GET', 'POST'])
+def edit_document(document_id):
+    conn = get_db_connection()
+    documento = conn.execute('SELECT * FROM documenti WHERE id = ?', (document_id,)).fetchone()
+
+    if request.method == 'POST':
+        nome_produttore = request.form['nome_produttore']
+        impianto_destinazione = request.form['impianto_destinazione']
+        codice_eer = request.form['codice_eer']
+        data_invio = request.form['data_invio']
+        data_accettazione = request.form['data_accettazione']
+        data_scadenza = request.form['data_scadenza']
+
+        conn.execute('''
+            UPDATE documenti SET 
+            nome_produttore = ?, 
+            impianto_destinazione = ?, 
+            codice_eer = ?, 
+            data_invio = ?, 
+            data_accettazione = ?, 
+            data_scadenza = ?
+            WHERE id = ?
+        ''', (nome_produttore, impianto_destinazione, codice_eer, data_invio, data_accettazione, data_scadenza, document_id))
+        conn.commit()
+        conn.close()
+
+        flash('Documento modificato con successo!', 'success')
+        return redirect(url_for('index'))
+
+    conn.close()
+    return render_template('edit.html', documento=documento)
+
+
+    conn.close()
+    return render_template('edit.html', document=doc)
+
 # Ricerca documenti
 @app.route('/search', methods=['GET'])
 def search():
-    query = request.args.get('query')
-
-    # Verifica se query è None o vuota
-    if not query:
-        query = ""  # Imposta query come stringa vuota se non è definita o è vuota
-
+    query = request.args.get('query') or ""
     conn = get_db_connection()
-    documenti = conn.execute('''
-        SELECT * FROM documenti 
-        WHERE nome_produttore LIKE ? 
-        OR impianto_destinazione LIKE ? 
-        OR indirizzo_cantiere LIKE ? 
-        OR codice_eer LIKE ?
-    ''', ('%' + query + '%', '%' + query + '%', '%' + query + '%', '%' + query + '%')).fetchall()
+    documenti = conn.execute('''SELECT * FROM documenti WHERE 
+        nome_produttore LIKE ? OR impianto_destinazione LIKE ? OR indirizzo_cantiere LIKE ? OR codice_eer LIKE ?''', 
+        ('%' + query + '%',) * 4).fetchall()
     conn.close()
-
     return render_template('search.html', documenti=documenti)
 
 # Eliminazione dei documenti selezionati
@@ -105,22 +145,18 @@ def delete_documents():
     # Recuperiamo gli ID dei documenti selezionati
     selected_ids = request.form.getlist('document_ids')
     
-    # Verifica che siano stati selezionati degli ID
     if selected_ids:
         try:
-            # Connettiamo al database e prepariamo la query per eliminare i documenti
             conn = get_db_connection()
             # Eseguiamo una DELETE dove gli ID corrispondono a quelli selezionati
             conn.execute(f"DELETE FROM documenti WHERE id IN ({','.join('?' for _ in selected_ids)})", selected_ids)
-            conn.commit()  # Commit delle modifiche
+            conn.commit()
             conn.close()
 
-            # Creiamo il corpo dell'email
+            # Invia un'email di notifica (opzionale)
             documenti_eliminati = ', '.join(selected_ids)
             subject = "Notifica di Eliminazione Documenti"
             body = f"I seguenti documenti sono stati eliminati: {documenti_eliminati}"
-
-            # Invio dell'email di notifica
             send_email(subject, body)
 
             flash('Documenti eliminati con successo!', 'success')
@@ -132,5 +168,6 @@ def delete_documents():
     return redirect(url_for('index'))
 
 if __name__ == '__main__':
-    app.run(debug=True)
-
+    # Utilizzo di HTTPS con un certificato autofirmato
+    context = ('cert.pem', 'key.pem')  # Assicurati di avere questi file
+    app.run(host='0.0.0.0', port=5000, debug=True, ssl_context=context)

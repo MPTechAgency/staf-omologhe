@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2 class="text-center mb-4">Modifica Documento</h2>
+
+<form method="POST">
+    <div class="form-group mb-3">
+        <label>Nome Produttore</label>
+        <input type="text" class="form-control" name="nome_produttore" value="{{ documento['nome_produttore'] }}" required>
+    </div>
+    <div class="form-group mb-3">
+        <label>Impianto Destinazione</label>
+        <input type="text" class="form-control" name="impianto_destinazione" value="{{ documento['impianto_destinazione'] }}" required>
+    </div>
+    <div class="form-group mb-3">
+        <label>Codice EER</label>
+        <input type="text" class="form-control" name="codice_eer" value="{{ documento['codice_eer'] }}" required>
+    </div>
+    <div class="form-group mb-3">
+        <label>Data Invio</label>
+        <input type="date" class="form-control" name="data_invio" value="{{ documento['data_invio'] }}" required>
+    </div>
+    <div class="form-group mb-3">
+        <label>Data Accettazione</label>
+        <input type="date" class="form-control" name="data_accettazione" value="{{ documento['data_accettazione'] }}" required>
+    </div>
+    <div class="form-group mb-3">
+        <label>Data Scadenza</label>
+        <input type="date" class="form-control" name="data_scadenza" value="{{ documento['data_scadenza'] }}" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Salva Modifiche</button>
+    <a href="{{ url_for('index') }}" class="btn btn-secondary">Annulla</a>
+</form>
+
+{% endblock %}
+
