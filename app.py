@@ -143,7 +143,7 @@ def aggiungi_impianto():
         conn.commit()
         conn.close()
         flash('Impianto aggiunto con successo!', 'success')
-        return redirect(url_for('lista_impianti.html'))
+        return redirect(url_for('lista_impianti'))
 
     return render_template('aggiungi_impianto.html')
 
