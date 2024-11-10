@@ -2,27 +2,30 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lista Produttori</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-
-<h1>Lista Produttori</h1>
-
-<table border="1">
-    <thead>
-        <tr>
-            <th>Nome Produttore</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for produttore in produttori %}
-        <tr>
-            <td>{{ produttore.nome_produttore }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-
+    <div class="container">
+        <h1>Lista Produttori</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nome Produttore</th>
+                    <th>Indirizzo</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for produttore in produttori %}
+                <tr>
+                    <td>{{ produttore['nome_produttore'] }}</td>
+                    <td>{{ produttore['indirizzo'] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <br>
+        <a href="{{ url_for('aggiungi_produttore') }}">Aggiungi Nuovo Produttore</a>
+    </div>
 </body>
 </html>
