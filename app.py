@@ -110,15 +110,24 @@ def lista_produttori():
 def aggiungi_produttore():
     if request.method == 'POST':
         nome_produttore = request.form['nome_produttore']
-        
-        with get_db_connection() as conn:
-            conn.execute('INSERT INTO produttori (nome_produttore, indirizzo_produttore) VALUES (?)', (nome_produttore, indirizzo_produttore))
-            conn.commit()
+        indirizzo_produttore = request.form['indirizzo_produttore']
 
+        # Connessione al database
+        conn = get_db_connection()
+        conn.execute(
+            'INSERT INTO produttori (nome_produttore, indirizzo) VALUES (?, ?)', 
+            (nome_produttore, indirizzo_produttore)
+        )
+        conn.commit()
+        conn.close()
+
+        # Messaggio di conferma
         flash('Produttore aggiunto con successo!', 'success')
         return redirect(url_for('lista_produttori'))
     
+    # Se il metodo è GET, mostra la pagina del form
     return render_template('aggiungi_produttore.html')
+
 
 
 # Lista Impianti: Visualizza tutti gli impianti

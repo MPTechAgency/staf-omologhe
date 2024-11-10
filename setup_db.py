@@ -26,7 +26,7 @@ c.execute('''
     CREATE TABLE IF NOT EXISTS produttori (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nome_produttore TEXT NOT NULL,
-        indirizzo_produttore TEXT NOT NULL
+        indirizzo_produttore TEXT
     );
 ''')
 
