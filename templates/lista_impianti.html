@@ -4,12 +4,60 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lista Impianti</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #343a40;
+            margin: 20px;
+            padding: 0;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .header img {
+            height: 60px;
+            margin-right: 20px;
+        }
+        h1 {
+            font-size: 2em;
+            color: #007bff;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: #ffffff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        table th, table td {
+            padding: 12px;
+            text-align: left;
+        }
+        table th {
+            background-color: #007bff;
+            color: #ffffff;
+        }
+        table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        table tr:hover {
+            background-color: #e9ecef;
+        }
+    </style>
 </head>
 <body>
 
-<h1>Lista Impianti</h1>
+<div class="header">
+    <a href="/">
+        <img src="{{ url_for('static', filename='logo_staf_piccolo.jpg') }}" alt="Logo STAF">
+    </a>
+    <h1>Lista Impianti</h1>
+</div>
 
-<table border="1">
+<table>
     <thead>
         <tr>
             <th>Nome Impianto</th>
