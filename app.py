@@ -187,7 +187,6 @@ def edit_document(document_id):
     conn.close()
     return render_template('edit.html', documento=documento)
 
-
 # Ricerca documenti
 @app.route('/search', methods=['GET'])
 def search():

@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS documenti (
 CREATE TABLE IF NOT EXISTS produttori (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nome_produttore TEXT NOT NULL,
-    indirizzo_produttore TEXT
+    indirizzo_produttore TEXT NOT NULL
 );
 
 -- Creazione della tabella 'impianti' per la lista impianti
