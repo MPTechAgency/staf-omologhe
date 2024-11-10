@@ -13,9 +13,13 @@ DATABASE = 'database.db'
 
 # Funzione per connettersi al database SQLite
 def get_db_connection():
-    conn = sqlite3.connect(DATABASE)
+    # Usa 'check_same_thread=False' e il timeout per gestire meglio la concorrenza
+    conn = sqlite3.connect(DATABASE, check_same_thread=False, timeout=10)
     conn.row_factory = sqlite3.Row
+    # Opzionale: Abilita il WAL per migliorare le performance con molte scritture
+    conn.execute('PRAGMA journal_mode=WAL;')
     return conn
+
 
 # Calcolo automatico della data di scadenza (365 giorni dopo la data di accettazione)
 def calcola_data_scadenza(data_accettazione):
@@ -61,6 +65,16 @@ def lista_omologhe():
 # Aggiungi Omologa: Modifica o aggiungi un nuovo documento
 @app.route('/aggiungi_omologa', methods=['GET', 'POST'])
 def aggiungi_omologa():
+    conn = get_db_connection()
+    
+    # Recupera la lista dei produttori
+    produttori = conn.execute('SELECT * FROM produttori').fetchall()
+    
+    # Recupera la lista degli impianti
+    impianti = conn.execute('SELECT * FROM impianti').fetchall()
+    
+    conn.close()
+
     if request.method == 'POST':
         nome_produttore = request.form['nome_produttore']
         impianto_destinazione = request.form['impianto_destinazione']
@@ -70,38 +84,33 @@ def aggiungi_omologa():
         data_accettazione = request.form['data_accettazione']
         data_scadenza = calcola_data_scadenza(data_accettazione)
 
+        # Inserisci i dati nel database
         conn = get_db_connection()
-        conn.execute('INSERT INTO documenti (nome_produttore, impianto_destinazione, indirizzo_cantiere, codice_eer, data_invio, data_accettazione, data_scadenza) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        conn.execute('INSERT INTO documenti (nome_produttore, impianto_destinazione, indirizzo_cantiere, codice_eer, data_invio, data_accettazione, data_scadenza) VALUES (?, ?, ?, ?, ?, ?, ?)', 
                      (nome_produttore, impianto_destinazione, indirizzo_cantiere, codice_eer, data_invio, data_accettazione, data_scadenza))
         conn.commit()
         conn.close()
         flash('Omologa aggiunta con successo!', 'success')
-        return redirect(url_for('aggiungi_omologa'))
+        return redirect(url_for('lista_omologhe'))
 
-    return render_template('aggiungi_omologa.html')
+    return render_template('aggiungi_omologa.html', produttori=produttori, impianti=impianti)
+
 
 
 # Lista Produttori: Visualizza tutti i produttori
-@app.route('/produttori')
-def lista_produttori():
-    conn = get_db_connection()
-    produttori = conn.execute('SELECT DISTINCT nome_produttore FROM documenti').fetchall()
-    conn.close()
-    return render_template('lista_produttori.html', produttori=produttori)
-
-# Aggiungi Produttore: Modifica o aggiungi un nuovo produttore
+# Usa con 'with' per gestire automaticamente la connessione
 @app.route('/aggiungi_produttore', methods=['GET', 'POST'])
 def aggiungi_produttore():
     if request.method == 'POST':
         nome_produttore = request.form['nome_produttore']
+        
+        with get_db_connection() as conn:
+            conn.execute('INSERT INTO produttori (nome_produttore, indirizzo_produttore) VALUES (?)', (nome_produttore, indirizzo_produttore))
+            conn.commit()
 
-        conn = get_db_connection()
-        conn.execute('INSERT INTO produttori (nome_produttore) VALUES (?)', (nome_produttore,))
-        conn.commit()
-        conn.close()
         flash('Produttore aggiunto con successo!', 'success')
         return redirect(url_for('lista_produttori'))
-
+    
     return render_template('aggiungi_produttore.html')
 
 
