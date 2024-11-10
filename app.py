@@ -13,11 +13,8 @@ DATABASE = 'database.db'
 
 # Funzione per connettersi al database SQLite
 def get_db_connection():
-    # Usa 'check_same_thread=False' e il timeout per gestire meglio la concorrenza
-    conn = sqlite3.connect(DATABASE, check_same_thread=False, timeout=10)
+    conn = sqlite3.connect(DATABASE, check_same_thread=False)
     conn.row_factory = sqlite3.Row
-    # Opzionale: Abilita il WAL per migliorare le performance con molte scritture
-    conn.execute('PRAGMA journal_mode=WAL;')
     return conn
 
 
@@ -98,6 +95,16 @@ def aggiungi_omologa():
 
 
 # Lista Produttori: Visualizza tutti i produttori
+
+# Lista Produttori: Visualizza tutti i produttori
+@app.route('/produttori')
+def lista_produttori():
+    conn = get_db_connection()
+    produttori = conn.execute('SELECT * FROM produttori').fetchall()
+    conn.close()
+    return render_template('lista_produttori.html', produttori=produttori)
+
+
 # Usa con 'with' per gestire automaticamente la connessione
 @app.route('/aggiungi_produttore', methods=['GET', 'POST'])
 def aggiungi_produttore():
