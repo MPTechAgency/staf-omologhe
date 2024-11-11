@@ -50,6 +50,8 @@
             width: 100%;
             border-collapse: collapse;
             margin: 20px 0;
+            table-layout: fixed;
+            /* Fissa la larghezza delle colonne in modo che si distribuisca lo spazio */
         }
 
         th,
@@ -57,10 +59,30 @@
             border: 1px solid #ddd;
             padding: 10px;
             text-align: left;
+            word-wrap: break-word;
+            /* Permette al testo di andare a capo se troppo lungo */
         }
 
         th {
             background-color: #f2f2f2;
+        }
+
+        th:first-child,
+        td:first-child {
+            width: 10%;
+            /* Larghezza dinamica per la prima colonna (checkbox) */
+        }
+
+        th:nth-child(2),
+        td:nth-child(2) {
+            width: 40%;
+            /* Imposta una larghezza per la seconda colonna */
+        }
+
+        th:nth-child(3),
+        td:nth-child(3) {
+            width: 50%;
+            /* Imposta una larghezza per la terza colonna */
         }
 
         .container {
@@ -81,13 +103,11 @@
             background-color: #e53935;
         }
 
-        /* Aggiunta di uno stile per le checkbox */
         input[type="checkbox"] {
             margin: 0;
             padding: 0;
         }
 
-        /* Stilizzazione del form di ricerca */
         .search-form {
             margin-bottom: 20px;
             display: flex;
@@ -157,8 +177,6 @@
                         <th><input type="checkbox" onclick="toggleSelectAll(this)"></th>
                         <th>Nome Produttore</th>
                         <th>Indirizzo</th>
-                        <th>Email</th>
-                        <th>Telefono</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -169,8 +187,6 @@
                                 class="document-checkbox"></td>
                         <td>{{ produttore.nome }}</td>
                         <td>{{ produttore.indirizzo }}</td>
-                        <td>{{ produttore.email }}</td>
-                        <td>{{ produttore.telefono }}</td>
                     </tr>
                     {% endfor %}
                     {% else %}
