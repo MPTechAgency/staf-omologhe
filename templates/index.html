@@ -6,11 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pagina Principale</title>
     <style>
+        /* Colori di base */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
             background-color: #f4f4f4;
+            color: #333;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         .header {
@@ -19,6 +22,8 @@
             padding: 20px;
             background-color: #ffffff;
             border-bottom: 2px solid #ddd;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s, color 0.3s;
         }
 
         .header img {
@@ -30,19 +35,31 @@
             margin: 0;
             color: #333;
             font-size: 24px;
+            transition: color 0.3s;
         }
 
         .container {
             display: flex;
             justify-content: center;
-            padding: 50px;
+            padding: 30px;
+            gap: 30px;
+            flex-wrap: wrap;
         }
 
         .column {
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin: 0 20px;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            width: 250px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .column:hover {
+            transform: translateY(-10px);
         }
 
         .button {
@@ -54,10 +71,59 @@
             color: white;
             text-decoration: none;
             border-radius: 5px;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            text-align: center;
         }
 
         .button:hover {
+            background-color: #45a049;
+            transform: scale(1.05);
+        }
+
+        /* Modalità Scura */
+        .dark-mode {
+            background-color: #181818;
+            color: #f4f4f4;
+        }
+
+        .dark-mode .header {
+            background-color: #333;
+            border-bottom: 2px solid #444;
+        }
+
+        .dark-mode .header h1 {
+            color: #f4f4f4;
+        }
+
+        .dark-mode .column {
+            background-color: #333;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        .dark-mode .button {
+            background-color: #555;
+        }
+
+        .dark-mode .button:hover {
+            background-color: #666;
+        }
+
+        /* Toggle Button */
+        .dark-mode-toggle {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            transition: background-color 0.3s;
+        }
+
+        .dark-mode-toggle:hover {
             background-color: #45a049;
         }
     </style>
@@ -70,6 +136,9 @@
         <img src="{{ url_for('static', filename='logo_staf_piccolo.jpg') }}" alt="Logo">
         <h1>Benvenuto nel sistema di gestione delle Omologhe</h1>
     </div>
+
+    <!-- Bottone per attivare/disattivare la modalità scura -->
+    <button class="dark-mode-toggle" id="dark-mode-toggle">Modalità Scura</button>
 
     <!-- Contenuto principale della pagina -->
     <div class="container">
@@ -91,6 +160,36 @@
             <a href="{{ url_for('aggiungi_impianto') }}" class="button">Aggiungi Impianto</a>
         </div>
     </div>
+
+    <script>
+        // Funzione per abilitare/disabilitare la modalità scura
+        const toggleButton = document.getElementById('dark-mode-toggle');
+        const body = document.body;
+
+        // Verifica la preferenza salvata nel localStorage
+        const darkModePreferred = localStorage.getItem('dark-mode') === 'true';
+
+        // Imposta la modalità scura all'avvio della pagina se è preferita
+        if (darkModePreferred) {
+            body.classList.add('dark-mode');
+            toggleButton.textContent = 'Modalità Chiara';
+        } else {
+            body.classList.remove('dark-mode');
+            toggleButton.textContent = 'Modalità Scura';
+        }
+
+        // Event listener per il pulsante della modalità scura
+        toggleButton.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+
+            // Salva la preferenza nel localStorage
+            const isDarkMode = body.classList.contains('dark-mode');
+            localStorage.setItem('dark-mode', isDarkMode);
+
+            // Cambia il testo del pulsante
+            toggleButton.textContent = isDarkMode ? 'Modalità Chiara' : 'Modalità Scura';
+        });
+    </script>
 
 </body>
 
