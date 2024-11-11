@@ -222,6 +222,39 @@ def delete_documents():
 
     return redirect(url_for('lista_omologhe'))
 
+@app.route('/delete_impianti', methods=['POST'])
+def delete_impianti():
+    # Ottieni gli ID degli impianti selezionati dal form
+    impianto_ids = request.form.getlist('impianto_ids')
+    conn = get_db_connection()
+    if impianto_ids:
+        for id in impianto_ids:
+            conn.execute('DELETE FROM impianti WHERE id = ?', (id,))
+        conn.commit()
+        conn.close()
+        flash('Impianti eliminati con successo!', 'success')
+    else:
+        flash('Nessun impianto selezionato per l\'eliminazione', 'warning')
+
+    return redirect(url_for('lista_impianti'))
+
+@app.route('/delete_produttori', methods=['POST'])
+def delete_produttori():
+    # Ottieni gli ID dei produttori selezionati dal form
+    produttore_ids = request.form.getlist('produttore_ids')
+    conn = get_db_connection()
+    
+    if produttore_ids:
+        for id in produttore_ids:
+            conn.execute('DELETE FROM produttori WHERE id = ?', (id,))
+        conn.commit()
+        conn.close()
+        flash('Produttori eliminati con successo!', 'success')
+    else:
+        flash('Nessun produttore selezionato per l\'eliminazione', 'warning')
+
+    return redirect(url_for('lista_produttori'))
+
 
 if __name__ == '__main__':
     # Utilizzo di HTTPS con un certificato autofirmato
