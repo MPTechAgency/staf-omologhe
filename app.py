@@ -66,36 +66,50 @@ def home():
 
 
 # Lista Omologhe: Visualizza tutti i documenti
-@app.route('/omologhe')
+@app.route('/omologhe', methods=['GET'])
 def lista_omologhe():
+    query = request.args.get('query', '')  # Ottieni la query di ricerca dalla richiesta, se presente
     conn = get_db_connection()
-    documenti = conn.execute('SELECT * FROM documenti').fetchall()
+
+    # Esegui la query SQL con la ricerca
+    if query:
+        # Usa LIKE per cercare in nome_produttore, indirizzo_cantiere, codice_eer, impianto_destinazione
+        documenti = conn.execute('''SELECT * FROM documenti WHERE
+            nome_produttore LIKE ? OR impianto_destinazione LIKE ? OR indirizzo_cantiere LIKE ? OR codice_eer LIKE ?''',
+            ('%' + query + '%',) * 4).fetchall()
+    else:
+        # Se non c'è query, prendi tutti i documenti
+        documenti = conn.execute('SELECT * FROM documenti').fetchall()
+
     conn.close()
 
     # Crea una nuova lista di dizionari mutabili
     documenti_formattati = []
 
+    # Funzione per gestire la conversione della data
+    def convert_date(date_string):
+        if isinstance(date_string, str):
+            try:
+                # Prova a fare il parsing con il formato completo (data e ora)
+                return datetime.strptime(date_string, '%Y-%m-%d %H:%M:%S')
+            except ValueError:
+                # Se fallisce, prova a fare il parsing solo con la data
+                return datetime.strptime(date_string, '%Y-%m-%d')
+        return date_string
+
     # Converte le date in oggetti datetime, se necessario
     for documento in documenti:
         documento_dict = dict(documento)  # Converte in dizionario mutabile
 
-        # Se il campo data_invio è una stringa, lo converto in datetime
-        if isinstance(documento_dict.get('data_invio'), str):
-            documento_dict['data_invio'] = datetime.strptime(documento_dict['data_invio'][:10], '%Y-%m-%d')
-        
-        # Se il campo data_accettazione è una stringa, lo converto in datetime
-        if isinstance(documento_dict.get('data_accettazione'), str):
-            documento_dict['data_accettazione'] = datetime.strptime(documento_dict['data_accettazione'][:10], '%Y-%m-%d')
-
-
-        # Se il campo data_scadenza è una stringa, lo converto in datetime
-        if isinstance(documento_dict.get('data_scadenza'), str):
-            documento_dict['data_scadenza'] = datetime.strptime(documento_dict['data_scadenza'][:10], '%Y-%m-%d')
+        # Converte i campi data_invio, data_accettazione, data_scadenza
+        documento_dict['data_invio'] = convert_date(documento_dict.get('data_invio'))
+        documento_dict['data_accettazione'] = convert_date(documento_dict.get('data_accettazione'))
+        documento_dict['data_scadenza'] = convert_date(documento_dict.get('data_scadenza'))
 
         # Aggiungi il documento formattato alla lista
         documenti_formattati.append(documento_dict)
 
-    return render_template('lista_omologhe.html', documenti=documenti_formattati, isExpired=isExpired)
+    return render_template('lista_omologhe.html', documenti=documenti_formattati, query=query, isExpired=isExpired)
 
 # Aggiungi Omologa: Modifica o aggiungi un nuovo documento
 @app.route('/aggiungi_omologa', methods=['GET', 'POST'])
@@ -154,15 +168,27 @@ def aggiungi_omologa():
     return render_template('aggiungi_omologa.html', produttori=produttori, impianti=impianti)
 
 # Lista Produttori: Visualizza tutti i produttori
-@app.route('/lista_produttori')
+@app.route('/lista_produttori', methods=['GET'])
 def lista_produttori():
-    conn = get_db_connection()
-    # Recupera tutti i produttori dalla tabella 'produttori'
-    produttori = conn.execute('SELECT * FROM produttori').fetchall()
-    conn.close()
-    # Passa i dati alla template 'lista_produttori.html' per la visualizzazione
-    return render_template('lista_produttori.html', produttori=produttori)
+    # Ottieni il parametro di ricerca 'query' dalla richiesta GET (se esiste)
+    query = request.args.get('query', '')
 
+    conn = get_db_connection()
+    
+    # Se c'è una query, filtra i produttori per nome
+    if query:
+        produttori = conn.execute('''
+            SELECT * FROM produttori
+            WHERE nome_produttore LIKE ?
+        ''', ('%' + query + '%',)).fetchall()
+    else:
+        # Se non c'è query, restituisci tutti i produttori
+        produttori = conn.execute('SELECT * FROM produttori').fetchall()
+    
+    conn.close()
+
+    # Passa i dati alla template per la visualizzazione
+    return render_template('lista_produttori.html', produttori=produttori, query=query)
 
 # Usa con 'with' per gestire automaticamente la connessione
 @app.route('/aggiungi_produttore', methods=['GET', 'POST'])
@@ -182,13 +208,27 @@ def aggiungi_produttore():
 
 
 # Lista Impianti: Visualizza tutti gli impianti
-@app.route('/impianti')
+@app.route('/impianti', methods=['GET'])
 def lista_impianti():
-    conn = get_db_connection()
-    impianti = conn.execute('SELECT * FROM impianti').fetchall()
-    conn.close()
-    return render_template('lista_impianti.html', impianti=impianti)
+    # Ottieni il parametro di ricerca 'query' dalla richiesta GET (se esiste)
+    query = request.args.get('query', '')
 
+    conn = get_db_connection()
+    
+    # Se c'è una query, filtra gli impianti per nome
+    if query:
+        impianti = conn.execute('''
+            SELECT * FROM impianti
+            WHERE nome_impianto LIKE ?
+        ''', ('%' + query + '%',)).fetchall()
+    else:
+        # Se non c'è query, restituisci tutti gli impianti
+        impianti = conn.execute('SELECT * FROM impianti').fetchall()
+    
+    conn.close()
+
+    # Passa i dati alla template per la visualizzazione
+    return render_template('lista_impianti.html', impianti=impianti, query=query)
 
 # Aggiungi Impianto: Modifica o aggiungi un nuovo impianto
 @app.route('/aggiungi_impianto', methods=['GET', 'POST'])

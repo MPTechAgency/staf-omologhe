@@ -86,6 +86,36 @@
             margin: 0;
             padding: 0;
         }
+
+        /* Stilizzazione del form di ricerca */
+        .search-form {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .search-form input[type="text"] {
+            padding: 8px;
+            width: 60%;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .search-form button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .search-form button:hover {
+            background-color: #45a049;
+        }
     </style>
 
     <script>
@@ -112,6 +142,13 @@
 
     <!-- Contenuto principale della pagina -->
     <div class="container">
+        <!-- Form di ricerca per nome produttore -->
+        <form method="GET" action="{{ url_for('lista_produttori') }}" class="search-form">
+            <input type="text" name="query" value="{{ query }}" placeholder="Cerca per Nome Produttore">
+            <button type="submit">Cerca</button>
+        </form>
+
+        <!-- Form per eliminare produttori -->
         <form method="POST" action="{{ url_for('delete_produttori') }}">
             <table>
                 <thead>

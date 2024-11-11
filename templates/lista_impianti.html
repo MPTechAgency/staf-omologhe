@@ -80,6 +80,42 @@
         button:hover {
             background-color: #e53935;
         }
+
+        /* Aggiunta di uno stile per le checkbox */
+        input[type="checkbox"] {
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Stilizzazione del form di ricerca */
+        .search-form {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .search-form input[type="text"] {
+            padding: 8px;
+            width: 60%;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .search-form button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .search-form button:hover {
+            background-color: #45a049;
+        }
     </style>
 
     <script>
@@ -91,6 +127,7 @@
             });
         }
     </script>
+
 </head>
 
 <body>
@@ -106,10 +143,18 @@
 
     <!-- Contenuto principale della pagina -->
     <div class="container">
+        <!-- Form di ricerca per nome impianto -->
+        <form method="GET" action="{{ url_for('lista_impianti') }}" class="search-form">
+            <input type="text" name="query" value="{{ query }}" placeholder="Cerca per Nome Impianto">
+            <button type="submit">Cerca</button>
+        </form>
+
+        <!-- Tabella degli impianti -->
         <form method="POST" action="{{ url_for('delete_impianti') }}">
             <table>
                 <thead>
                     <tr>
+                        <!-- Checkbox globale per selezionare/deselezionare tutti -->
                         <th><input type="checkbox" onclick="toggleSelectAll(this)"></th>
                         <th>Nome Impianto</th>
                         <th>Indirizzo Impianto</th>
@@ -119,6 +164,7 @@
                     {% if impianti %}
                     {% for impianto in impianti %}
                     <tr>
+                        <!-- Checkbox individuali per ogni impianto -->
                         <td><input type="checkbox" name="impianto_ids" value="{{ impianto.id }}"
                                 class="impianto-checkbox"></td>
                         <td>{{ impianto.nome_impianto }}</td>

@@ -105,6 +105,36 @@
             background-color: #FFCDD2;
             /* Rosso chiaro per scadenza */
         }
+
+        /* Stilizzazione per il form di ricerca */
+        .search-form {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .search-form input[type="text"] {
+            padding: 8px;
+            width: 60%;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .search-form button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .search-form button:hover {
+            background-color: #45a049;
+        }
     </style>
 
     <script>
@@ -138,6 +168,13 @@
 
     <!-- Contenuto principale della pagina -->
     <div class="container">
+        <!-- Form di ricerca -->
+        <form method="GET" action="{{ url_for('lista_omologhe') }}" class="search-form">
+            <input type="text" name="query" value="{{ query }}"
+                placeholder="Cerca per Produttore, Impianto, Indirizzo, Codice EER">
+            <button type="submit">Cerca</button>
+        </form>
+
         <form method="POST" action="{{ url_for('delete_documents') }}">
 
             <table>
@@ -158,6 +195,7 @@
                     {% if documenti %}
                     {% for documento in documenti %}
                     <tr class="{{ 'expired' if isExpired(documento.data_scadenza) }}">
+
                         <td><input type="checkbox" name="document_ids" value="{{ documento.id }}"
                                 class="document-checkbox"></td>
                         <td>{{ documento.nome_produttore }}</td>
