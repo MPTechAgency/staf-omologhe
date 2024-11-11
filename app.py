@@ -23,11 +23,14 @@ def get_db_connection():
 
 # Funzione per verificare se il documento è scaduto
 def isExpired(data_scadenza):
-    # Converte la data di scadenza in un oggetto datetime
-    data_scadenza = datetime.strptime(data_scadenza, '%Y-%m-%d')
-    # Verifica se la data di scadenza è nel passato
-    return data_scadenza < datetime.now()
-
+    # Se data_scadenza è già un oggetto datetime, non chiamare strptime
+    if isinstance(data_scadenza, datetime):
+        return data_scadenza < datetime.now()
+    # Se data_scadenza è una stringa, convertila prima in datetime
+    elif isinstance(data_scadenza, str):
+        data_scadenza = datetime.strptime(data_scadenza, '%Y-%m-%d')
+        return data_scadenza < datetime.now()
+    return False  # Ritorna False se data_scadenza non è né str né datetime
 
 # Calcolo automatico della data di scadenza (365 giorni dopo la data di accettazione)
 def calcola_data_scadenza(data_accettazione):
@@ -68,7 +71,31 @@ def lista_omologhe():
     conn = get_db_connection()
     documenti = conn.execute('SELECT * FROM documenti').fetchall()
     conn.close()
-    return render_template('lista_omologhe.html', documenti=documenti, isExpired=isExpired)
+
+    # Crea una nuova lista di dizionari mutabili
+    documenti_formattati = []
+
+    # Converte le date in oggetti datetime, se necessario
+    for documento in documenti:
+        documento_dict = dict(documento)  # Converte in dizionario mutabile
+
+        # Se il campo data_invio è una stringa, lo converto in datetime
+        if isinstance(documento_dict.get('data_invio'), str):
+            documento_dict['data_invio'] = datetime.strptime(documento_dict['data_invio'][:10], '%Y-%m-%d')
+        
+        # Se il campo data_accettazione è una stringa, lo converto in datetime
+        if isinstance(documento_dict.get('data_accettazione'), str):
+            documento_dict['data_accettazione'] = datetime.strptime(documento_dict['data_accettazione'][:10], '%Y-%m-%d')
+
+
+        # Se il campo data_scadenza è una stringa, lo converto in datetime
+        if isinstance(documento_dict.get('data_scadenza'), str):
+            documento_dict['data_scadenza'] = datetime.strptime(documento_dict['data_scadenza'][:10], '%Y-%m-%d')
+
+        # Aggiungi il documento formattato alla lista
+        documenti_formattati.append(documento_dict)
+
+    return render_template('lista_omologhe.html', documenti=documenti_formattati, isExpired=isExpired)
 
 # Aggiungi Omologa: Modifica o aggiungi un nuovo documento
 @app.route('/aggiungi_omologa', methods=['GET', 'POST'])
@@ -183,59 +210,64 @@ def aggiungi_impianto():
     return render_template('aggiungi_impianto.html')
 
 # Modifica un documento esistente
-@app.route('/edit/<int:document_id>', methods=['GET', 'POST'])
-def edit_document(document_id):
+@app.route('/modifica_omologa/<int:documento_id>', methods=['GET', 'POST'])
+def modifica_omologa(documento_id):
     conn = get_db_connection()
 
     # Recupera il documento dal database
-    documento = conn.execute('SELECT * FROM documenti WHERE id = ?', (document_id,)).fetchone()
-
-    # Se il documento non esiste, rimanda alla lista delle omologhe
+    documento = conn.execute('SELECT * FROM documenti WHERE id = ?', (documento_id,)).fetchone()
     if documento is None:
-        flash('Documento non trovato', 'danger')
-        return redirect(url_for('lista_omologhe'))
+        return 'Documento non trovato', 404
+
+    # Recupera la lista dei produttori e degli impianti dal database
+    produttori = conn.execute('SELECT * FROM produttori').fetchall()
+    impianti = conn.execute('SELECT * FROM impianti').fetchall()
+
+    conn.close()
+
+    # Convertire il risultato in un dizionario per modificarlo
+    documento = dict(documento)
+
+    # Se le date sono stringhe, convertili in oggetti datetime
+    if isinstance(documento['data_invio'], str):
+        documento['data_invio'] = datetime.strptime(documento['data_invio'], '%Y-%m-%d')
+    if isinstance(documento['data_accettazione'], str):
+        documento['data_accettazione'] = datetime.strptime(documento['data_accettazione'], '%Y-%m-%d')
+    if isinstance(documento['data_scadenza'], str):
+        documento['data_scadenza'] = datetime.strptime(documento['data_scadenza'], '%Y-%m-%d')
 
     if request.method == 'POST':
-        # Recupera i dati dal form di modifica
+        # Ricevi i dati modificati dal form
         nome_produttore = request.form['nome_produttore']
         impianto_destinazione = request.form['impianto_destinazione']
+        indirizzo_cantiere = request.form['indirizzo_cantiere']
         codice_eer = request.form['codice_eer']
         data_invio = request.form['data_invio']
         data_accettazione = request.form['data_accettazione']
-        indirizzo_cantiere = request.form['indirizzo_cantiere']
 
-        # Calcola la data di scadenza in base alla data di accettazione
-        data_scadenza = calcola_data_scadenza(data_accettazione)
+        # Converte le date da stringa a datetime
+        data_invio = datetime.strptime(data_invio, '%Y-%m-%d')
+        data_accettazione = datetime.strptime(data_accettazione, '%Y-%m-%d')
 
-        # Esegui l'update del documento nel database
-        conn.execute('''
+        # Calcolare la data di scadenza automaticamente (ad esempio, 30 giorni dopo la data di accettazione)
+        data_scadenza = data_accettazione + timedelta(days=30)
+
+        # Esegui l'aggiornamento nel database
+        conn = get_db_connection()
+        conn.execute(''' 
             UPDATE documenti
-            SET nome_produttore = ?,
-                impianto_destinazione = ?,
-                codice_eer = ?,
-                data_invio = ?,
-                data_accettazione = ?,
-                data_scadenza = ?,
-                indirizzo_cantiere = ?
+            SET nome_produttore = ?, impianto_destinazione = ?, indirizzo_cantiere = ?, codice_eer = ?, 
+                data_invio = ?, data_accettazione = ?, data_scadenza = ?
             WHERE id = ?
-        ''', (nome_produttore, impianto_destinazione, codice_eer, data_invio, data_accettazione, data_scadenza, indirizzo_cantiere, document_id))
+        ''', (nome_produttore, impianto_destinazione, indirizzo_cantiere, codice_eer, data_invio, data_accettazione, data_scadenza, documento_id))
         conn.commit()
         conn.close()
 
-        flash('Omologa modificata con successo!', 'success')
+        # Reindirizza alla lista delle omologhe dopo la modifica
         return redirect(url_for('lista_omologhe'))
 
-    conn.close()
-
-    # Recupera la lista dei produttori e degli impianti per precompilare i select
-    conn = get_db_connection()
-    produttori = conn.execute('SELECT * FROM produttori').fetchall()
-    impianti = conn.execute('SELECT * FROM impianti').fetchall()
-    conn.close()
-
-    # Passa il documento da modificare e i dati di riferimento (produttori e impianti) alla pagina di modifica
-    return render_template('edit_documento.html', documento=documento, produttori=produttori, impianti=impianti)
-
+    # Passa i dati al template
+    return render_template('modifica_omologa.html', documento=documento, produttori=produttori, impianti=impianti)
 
 # Ricerca documenti
 @app.route('/search', methods=['GET'])

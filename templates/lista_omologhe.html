@@ -139,6 +139,7 @@
     <!-- Contenuto principale della pagina -->
     <div class="container">
         <form method="POST" action="{{ url_for('delete_documents') }}">
+
             <table>
                 <thead>
                     <tr>
@@ -163,10 +164,11 @@
                         <td>{{ documento.impianto_destinazione }}</td>
                         <td>{{ documento.indirizzo_cantiere }}</td>
                         <td>{{ documento.codice_eer }}</td>
-                        <td>{{ documento.data_invio }}</td>
-                        <td>{{ documento.data_accettazione }}</td>
-                        <td>{{ documento.data_scadenza }}</td>
-                        <td><button type="button" class="edit-button">Modifica</button></td>
+                        <td>{{ documento.data_invio.strftime('%d-%m-%Y') }}</td> <!-- Formattazione data invio -->
+                        <td>{{ documento.data_accettazione.strftime('%d-%m-%Y') }}</td>
+                        <td>{{ documento.data_scadenza.strftime('%d-%m-%Y') }}</td> <!-- Formattazione data scadenza -->
+                        <td><a href="{{ url_for('modifica_omologa', documento_id=documento.id) }}"
+                                class="edit-button">Modifica</a></td>
                     </tr>
                     {% endfor %}
                     {% else %}

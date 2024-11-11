@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modifica Omologa</title>
+    <style>
+        /* Stili generali */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            background-color: #ffffff;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .header img {
+            height: 50px;
+            margin-right: 20px;
+        }
+
+        .header h1 {
+            margin: 0;
+            color: #333;
+            font-size: 24px;
+        }
+
+        .header a {
+            text-decoration: none;
+            color: white;
+            background-color: #4CAF50;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .header a:hover {
+            background-color: #45a049;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        select,
+        input[type="text"],
+        input[type="date"] {
+            width: 99%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .form-row {
+            margin-bottom: 20px;
+        }
+
+        /* Modifiche ai pulsanti */
+        .edit-button {
+            background-color: #FFEB3B;
+            color: black;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .edit-button:hover {
+            background-color: #FBC02D;
+        }
+    </style>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+</head>
+
+<body>
+
+    <div class="header">
+        <div style="display: flex; align-items: center;">
+            <img src="{{ url_for('static', filename='logo_staf_piccolo.jpg') }}" alt="Logo">
+            <h1>Modifica Omologa</h1>
+        </div>
+        <a href="{{ url_for('home') }}">Torna alla Homepage</a>
+    </div>
+
+    <div class="container">
+        <form method="POST">
+            <!-- Campo per selezionare il produttore -->
+            <div class="form-group">
+                <label for="nome_produttore">Produttore</label>
+                <select name="nome_produttore" id="nome_produttore" required>
+                    <option value="">Seleziona un produttore</option>
+                    {% for produttore in produttori %}
+                    <option value="{{ produttore['nome_produttore'] }}" {% if
+                        produttore['nome_produttore']==documento['nome_produttore'] %} selected {% endif %}>
+                        {{ produttore['nome_produttore'] }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Campo per selezionare l'impianto -->
+            <div class="form-group">
+                <label for="impianto_destinazione">Impianto</label>
+                <select name="impianto_destinazione" id="impianto_destinazione" required>
+                    <option value="">Seleziona un impianto</option>
+                    {% for impianto in impianti %}
+                    <option value="{{ impianto['nome_impianto'] }}" {% if
+                        impianto['nome_impianto']==documento['impianto_destinazione'] %} selected {% endif %}>
+                        {{ impianto['nome_impianto'] }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Altri campi del form -->
+            <div class="form-row">
+                <label for="indirizzo_cantiere">Indirizzo Cantiere</label>
+                <input type="text" id="indirizzo_cantiere" name="indirizzo_cantiere"
+                    value="{{ documento['indirizzo_cantiere'] }}" required>
+            </div>
+
+            <div class="form-row">
+                <label for="codice_eer">Codice EER</label>
+                <input type="text" id="codice_eer" name="codice_eer" value="{{ documento['codice_eer'] }}" required>
+            </div>
+
+            <div class="form-row">
+                <label for="data_invio">Data Invio</label>
+                <input type="date" id="data_invio" name="data_invio"
+                    value="{{ documento['data_invio'].strftime('%Y-%m-%d') }}" required>
+            </div>
+
+            <div class="form-row">
+                <label for="data_accettazione">Data Accettazione</label>
+                <input type="date" id="data_accettazione" name="data_accettazione"
+                    value="{{ documento['data_accettazione'].strftime('%Y-%m-%d') }}" required>
+            </div>
+
+            <div class="form-row">
+                <label for="data_scadenza">Data di Scadenza</label>
+                <input type="date" id="data_scadenza" name="data_scadenza"
+                    value="{{ documento['data_scadenza'].strftime('%Y-%m-%d') }}" readonly>
+            </div>
+
+            <button type="submit">Aggiorna</button>
+        </form>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#nome_produttore').select2();
+            $('#impianto_destinazione').select2();
+        });
+    </script>
+
+</body>
+
+</html>
