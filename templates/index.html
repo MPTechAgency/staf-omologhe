@@ -23,7 +23,6 @@
 
         .header img {
             height: 50px;
-            /* Regola l'altezza del logo */
             margin-right: 20px;
         }
 
@@ -34,14 +33,22 @@
         }
 
         .container {
-            text-align: center;
+            display: flex;
+            justify-content: center;
             padding: 50px;
         }
 
+        .column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0 20px;
+        }
+
         .button {
-            display: inline-block;
+            display: block;
             padding: 15px 30px;
-            margin: 10px;
+            margin: 10px 0;
             font-size: 18px;
             background-color: #4CAF50;
             color: white;
@@ -61,17 +68,28 @@
     <!-- Header con il logo e il titolo -->
     <div class="header">
         <img src="{{ url_for('static', filename='logo_staf_piccolo.jpg') }}" alt="Logo">
-        <h1>Benvenuto nel sistema di gestione documenti</h1>
+        <h1>Benvenuto nel sistema di gestione delle Omologhe</h1>
     </div>
 
     <!-- Contenuto principale della pagina -->
     <div class="container">
-        <a href="{{ url_for('lista_omologhe') }}" class="button">Lista Omologhe</a><br>
-        <a href="{{ url_for('aggiungi_omologa') }}" class="button">Aggiungi Omologa</a><br>
-        <a href="{{ url_for('lista_produttori') }}" class="button">Lista Produttori</a><br>
-        <a href="{{ url_for('aggiungi_produttore') }}" class="button">Aggiungi Produttore</a><br>
-        <a href="{{ url_for('lista_impianti') }}" class="button">Lista Impianti</a><br>
-        <a href="{{ url_for('aggiungi_impianto') }}" class="button">Aggiungi Impianto</a><br>
+        <!-- Prima colonna -->
+        <div class="column">
+            <a href="{{ url_for('lista_omologhe') }}" class="button">Lista Omologhe</a>
+            <a href="{{ url_for('aggiungi_omologa') }}" class="button">Aggiungi Omologa</a>
+        </div>
+
+        <!-- Seconda colonna -->
+        <div class="column">
+            <a href="{{ url_for('lista_produttori') }}" class="button">Lista Produttori</a>
+            <a href="{{ url_for('aggiungi_produttore') }}" class="button">Aggiungi Produttore</a>
+        </div>
+
+        <!-- Terza colonna -->
+        <div class="column">
+            <a href="{{ url_for('lista_impianti') }}" class="button">Lista Impianti</a>
+            <a href="{{ url_for('aggiungi_impianto') }}" class="button">Aggiungi Impianto</a>
+        </div>
     </div>
 
 </body>

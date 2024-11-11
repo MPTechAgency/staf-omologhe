@@ -5,8 +5,85 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lista Impianti</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            background-color: #ffffff;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .header img {
+            height: 50px;
+            margin-right: 20px;
+        }
+
+        .header h1 {
+            margin: 0;
+            color: #333;
+            font-size: 24px;
+        }
+
+        .header a {
+            text-decoration: none;
+            color: white;
+            background-color: #4CAF50;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .header a:hover {
+            background-color: #45a049;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        button {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #e53935;
+        }
+    </style>
+
     <script>
-        // Funzione per selezionare/deselezionare tutti i checkbox
+        // Funzione per selezionare/deselezionare tutte le checkbox
         function toggleSelectAll(source) {
             const checkboxes = document.querySelectorAll('.impianto-checkbox');
             checkboxes.forEach((checkbox) => {
@@ -18,33 +95,49 @@
 
 <body>
 
-    <h1>Lista Impianti</h1>
+    <!-- Barra superiore con il logo e il pulsante Home -->
+    <div class="header">
+        <div style="display: flex; align-items: center;">
+            <img src="{{ url_for('static', filename='logo_staf_piccolo.jpg') }}" alt="Logo">
+            <h1>Lista Impianti</h1>
+        </div>
+        <a href="{{ url_for('home') }}">Torna alla Homepage</a>
+    </div>
 
-    <form method="POST" action="{{ url_for('delete_impianti') }}">
-        <table border="1">
-            <thead>
-                <tr>
-                    <th><input type="checkbox" onclick="toggleSelectAll(this)"></th>
-                    <th>Nome Impianto</th>
-                    <th>Indirizzo Impianto</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for impianto in impianti %}
-                <tr>
-                    <td><input type="checkbox" name="impianto_ids" value="{{ impianto.id }}" class="impianto-checkbox">
-                    </td>
-                    <td>{{ impianto.nome_impianto }}</td>
-                    <td>{{ impianto.indirizzo_impianto }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <!-- Contenuto principale della pagina -->
+    <div class="container">
+        <form method="POST" action="{{ url_for('delete_impianti') }}">
+            <table>
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" onclick="toggleSelectAll(this)"></th>
+                        <th>Nome Impianto</th>
+                        <th>Indirizzo Impianto</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if impianti %}
+                    {% for impianto in impianti %}
+                    <tr>
+                        <td><input type="checkbox" name="impianto_ids" value="{{ impianto.id }}"
+                                class="impianto-checkbox"></td>
+                        <td>{{ impianto.nome_impianto }}</td>
+                        <td>{{ impianto.indirizzo_impianto }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="3" style="text-align: center;">Nessun impianto trovato.</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
 
-        <br>
+            <br>
 
-        <button type="submit">Elimina Selezionati</button>
-    </form>
+            <button type="submit">Elimina Selezionati</button>
+        </form>
+    </div>
 
 </body>
 

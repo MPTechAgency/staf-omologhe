@@ -21,6 +21,14 @@ def get_db_connection():
     return conn
 
 
+# Funzione per verificare se il documento è scaduto
+def isExpired(data_scadenza):
+    # Converte la data di scadenza in un oggetto datetime
+    data_scadenza = datetime.strptime(data_scadenza, '%Y-%m-%d')
+    # Verifica se la data di scadenza è nel passato
+    return data_scadenza < datetime.now()
+
+
 # Calcolo automatico della data di scadenza (365 giorni dopo la data di accettazione)
 def calcola_data_scadenza(data_accettazione):
     scadenza = datetime.strptime(data_accettazione, '%Y-%m-%d') + timedelta(days=365)
@@ -60,7 +68,7 @@ def lista_omologhe():
     conn = get_db_connection()
     documenti = conn.execute('SELECT * FROM documenti').fetchall()
     conn.close()
-    return render_template('lista_omologhe.html', documenti=documenti)
+    return render_template('lista_omologhe.html', documenti=documenti, isExpired=isExpired)
 
 # Aggiungi Omologa: Modifica o aggiungi un nuovo documento
 @app.route('/aggiungi_omologa', methods=['GET', 'POST'])
@@ -76,36 +84,56 @@ def aggiungi_omologa():
     conn.close()
 
     if request.method == 'POST':
-        nome_produttore = request.form['nome_produttore']
-        impianto_destinazione = request.form['impianto_destinazione']
-        indirizzo_cantiere = request.form['indirizzo_cantiere']
-        codice_eer = request.form['codice_eer']
-        data_invio = request.form['data_invio']
-        data_accettazione = request.form['data_accettazione']
+        # Recupera i dati dal form
+        document_id = request.form.get('id')  # id del documento, se presente per aggiornare
+        nome_produttore = request.form.get('nome_produttore')
+        impianto_destinazione = request.form.get('impianto_destinazione')
+        codice_eer = request.form.get('codice_eer')
+        data_invio = request.form.get('data_invio')
+        data_accettazione = request.form.get('data_accettazione')
+        indirizzo_cantiere = request.form.get('indirizzo_cantiere')  # Recupera l'indirizzo del cantiere
+
+        # Calcola la data di scadenza in base alla data di accettazione
         data_scadenza = calcola_data_scadenza(data_accettazione)
-
-        # Inserisci i dati nel database
+        
+        # Riapri la connessione per l'operazione di aggiornamento o inserimento
         conn = get_db_connection()
-        conn.execute('INSERT INTO documenti (nome_produttore, impianto_destinazione, indirizzo_cantiere, codice_eer, data_invio, data_accettazione, data_scadenza) VALUES (?, ?, ?, ?, ?, ?, ?)', 
-                     (nome_produttore, impianto_destinazione, indirizzo_cantiere, codice_eer, data_invio, data_accettazione, data_scadenza))
-        conn.commit() 
-        conn.close()
-        flash('Omologa aggiunta con successo!', 'success')
-        return redirect(url_for('lista_omologhe'))
 
+        # Se document_id è presente, aggiorniamo il documento esistente
+        if document_id:
+            conn.execute('''UPDATE documenti 
+                            SET nome_produttore = ?, 
+                                impianto_destinazione = ?, 
+                                codice_eer = ?, 
+                                data_invio = ?, 
+                                data_accettazione = ?, 
+                                data_scadenza = ?, 
+                                indirizzo_cantiere = ?  -- Aggiungi indirizzo_cantiere
+                            WHERE id = ?''', 
+                            (nome_produttore, impianto_destinazione, codice_eer, data_invio, data_accettazione, data_scadenza, indirizzo_cantiere, document_id))
+        else:
+            # Se document_id non è presente, inseriamo un nuovo documento
+            conn.execute('''INSERT INTO documenti (nome_produttore, impianto_destinazione, codice_eer, data_invio, data_accettazione, data_scadenza, indirizzo_cantiere) 
+                            VALUES (?, ?, ?, ?, ?, ?, ?)''', 
+                            (nome_produttore, impianto_destinazione, codice_eer, data_invio, data_accettazione, data_scadenza, indirizzo_cantiere))
+
+        conn.commit()  # Salviamo le modifiche nel database
+        conn.close()   # Chiudiamo la connessione al database
+        
+        flash('Omologa aggiunta con successo!', 'success')  # Messaggio di successo
+        return redirect(url_for('lista_omologhe'))  # Reindirizza alla lista delle omologhe
+    
+    # Se la richiesta è di tipo GET, renderizza il modulo di aggiunta
     return render_template('aggiungi_omologa.html', produttori=produttori, impianti=impianti)
 
-
-
 # Lista Produttori: Visualizza tutti i produttori
-@app.route('/lista_produttori', methods=['GET'])
+@app.route('/lista_produttori')
 def lista_produttori():
-    # Connessione al database
-    with get_db_connection() as conn:
-        # Recupera tutti i produttori dal database
-        produttori = conn.execute('SELECT * FROM produttori').fetchall()
-
-    # Passa i dati alla template per la visualizzazione
+    conn = get_db_connection()
+    # Recupera tutti i produttori dalla tabella 'produttori'
+    produttori = conn.execute('SELECT * FROM produttori').fetchall()
+    conn.close()
+    # Passa i dati alla template 'lista_produttori.html' per la visualizzazione
     return render_template('lista_produttori.html', produttori=produttori)
 
 
@@ -121,7 +149,7 @@ def aggiungi_produttore():
             conn.commit()
 
         flash('Produttore aggiunto con successo!', 'success')
-        return redirect(url_for('lista_produttori.html'))
+        return redirect(url_for('lista_produttori'))
     
     return render_template('aggiungi_produttore.html') 
 
@@ -140,15 +168,17 @@ def lista_impianti():
 def aggiungi_impianto():
     if request.method == 'POST':
         nome_impianto = request.form['nome_impianto']
-        indirizzo_impianto = request.form['indirizzo_impianto']
+        indirizzo_impianto = request.form['indirizzo_impianto'] 
 
-        conn = get_db_connection()
-        conn.execute('INSERT INTO impianti (nome_impianto, indirizzo_impianto) VALUES (?, ?)',
-                     (nome_impianto, indirizzo_impianto))
-        conn.commit()
-        conn.close()
+        with get_db_connection() as conn:
+            conn.execute('INSERT INTO impianti (nome_impianto, indirizzo_impianto) VALUES (?, ?)',
+                         (nome_impianto, indirizzo_impianto))
+            conn.commit()
+
         flash('Impianto aggiunto con successo!', 'success')
-        return redirect(url_for('lista_impianti.html'))
+
+
+        return redirect(url_for('lista_impianti'))
 
     return render_template('aggiungi_impianto.html')
 
@@ -156,32 +186,55 @@ def aggiungi_impianto():
 @app.route('/edit/<int:document_id>', methods=['GET', 'POST'])
 def edit_document(document_id):
     conn = get_db_connection()
+
+    # Recupera il documento dal database
     documento = conn.execute('SELECT * FROM documenti WHERE id = ?', (document_id,)).fetchone()
 
+    # Se il documento non esiste, rimanda alla lista delle omologhe
+    if documento is None:
+        flash('Documento non trovato', 'danger')
+        return redirect(url_for('lista_omologhe'))
+
     if request.method == 'POST':
+        # Recupera i dati dal form di modifica
         nome_produttore = request.form['nome_produttore']
         impianto_destinazione = request.form['impianto_destinazione']
         codice_eer = request.form['codice_eer']
         data_invio = request.form['data_invio']
         data_accettazione = request.form['data_accettazione']
-        data_scadenza = request.form['data_scadenza']
+        indirizzo_cantiere = request.form['indirizzo_cantiere']
 
-        conn.execute('''UPDATE documenti SET
-            nome_produttore = ?,
-            impianto_destinazione = ?,
-            codice_eer = ?,
-            data_invio = ?,
-            data_accettazione = ?,
-            data_scadenza = ? WHERE id = ?''',
-            (nome_produttore, impianto_destinazione, codice_eer, data_invio, data_accettazione, data_scadenza, document_id))
+        # Calcola la data di scadenza in base alla data di accettazione
+        data_scadenza = calcola_data_scadenza(data_accettazione)
+
+        # Esegui l'update del documento nel database
+        conn.execute('''
+            UPDATE documenti
+            SET nome_produttore = ?,
+                impianto_destinazione = ?,
+                codice_eer = ?,
+                data_invio = ?,
+                data_accettazione = ?,
+                data_scadenza = ?,
+                indirizzo_cantiere = ?
+            WHERE id = ?
+        ''', (nome_produttore, impianto_destinazione, codice_eer, data_invio, data_accettazione, data_scadenza, indirizzo_cantiere, document_id))
         conn.commit()
         conn.close()
 
         flash('Omologa modificata con successo!', 'success')
-        return redirect(url_for('lista_omologhe.html'))
+        return redirect(url_for('lista_omologhe'))
 
     conn.close()
-    return render_template('edit.html', documento=documento)
+
+    # Recupera la lista dei produttori e degli impianti per precompilare i select
+    conn = get_db_connection()
+    produttori = conn.execute('SELECT * FROM produttori').fetchall()
+    impianti = conn.execute('SELECT * FROM impianti').fetchall()
+    conn.close()
+
+    # Passa il documento da modificare e i dati di riferimento (produttori e impianti) alla pagina di modifica
+    return render_template('edit_documento.html', documento=documento, produttori=produttori, impianti=impianti)
 
 
 # Ricerca documenti

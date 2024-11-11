@@ -5,11 +5,94 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lista Produttori</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            background-color: #ffffff;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .header img {
+            height: 50px;
+            margin-right: 20px;
+        }
+
+        .header h1 {
+            margin: 0;
+            color: #333;
+            font-size: 24px;
+        }
+
+        .header a {
+            text-decoration: none;
+            color: white;
+            background-color: #4CAF50;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .header a:hover {
+            background-color: #45a049;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        button {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #e53935;
+        }
+
+        /* Aggiunta di uno stile per le checkbox */
+        input[type="checkbox"] {
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+
     <script>
-        // Funzione per selezionare/deselezionare tutti i checkbox
+        // Funzione per selezionare/deselezionare tutte le checkbox
         function toggleSelectAll(source) {
-            const checkboxes = document.querySelectorAll('.produttore-checkbox');
-            checkboxes.forEach((checkbox) => {
+            let checkboxes = document.querySelectorAll('.document-checkbox');
+            checkboxes.forEach(function (checkbox) {
                 checkbox.checked = source.checked;
             });
         }
@@ -18,33 +101,54 @@
 
 <body>
 
-    <h1>Lista Produttori</h1>
+    <!-- Barra superiore con il logo e il pulsante Home -->
+    <div class="header">
+        <div style="display: flex; align-items: center;">
+            <img src="{{ url_for('static', filename='logo_staf_piccolo.jpg') }}" alt="Logo">
+            <h1>Lista Produttori</h1>
+        </div>
+        <a href="{{ url_for('home') }}">Torna alla Homepage</a>
+    </div>
 
-    <form method="POST" action="{{ url_for('delete_produttori') }}">
-        <table border="1">
-            <thead>
-                <tr>
-                    <th><input type="checkbox" onclick="toggleSelectAll(this)"></th>
-                    <th>Nome Produttore</th>
-                    <th>Indirizzo Produttore</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for produttore in produttori %}
-                <tr>
-                    <td><input type="checkbox" name="produttore_ids" value="{{ produttore.id }}"
-                            class="produttore-checkbox"></td>
-                    <td>{{ produttore.nome_produttore }}</td>
-                    <td>{{ produttore.indirizzo_produttore }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <!-- Contenuto principale della pagina -->
+    <div class="container">
+        <form method="POST" action="{{ url_for('delete_produttori') }}">
+            <table>
+                <thead>
+                    <tr>
+                        <!-- Checkbox per selezionare/deselezionare tutti i produttori -->
+                        <th><input type="checkbox" onclick="toggleSelectAll(this)"></th>
+                        <th>Nome Produttore</th>
+                        <th>Indirizzo</th>
+                        <th>Email</th>
+                        <th>Telefono</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if produttori %}
+                    {% for produttore in produttori %}
+                    <tr>
+                        <td><input type="checkbox" name="produttore_ids" value="{{ produttore.id }}"
+                                class="document-checkbox"></td>
+                        <td>{{ produttore.nome }}</td>
+                        <td>{{ produttore.indirizzo }}</td>
+                        <td>{{ produttore.email }}</td>
+                        <td>{{ produttore.telefono }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="5" style="text-align: center;">Nessun produttore trovato.</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
 
-        <br>
+            <br>
 
-        <button type="submit">Elimina Selezionati</button>
-    </form>
+            <button type="submit">Elimina Selezionati</button>
+        </form>
+    </div>
 
 </body>
 

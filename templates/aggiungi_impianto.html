@@ -1,23 +1,127 @@
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aggiungi Impianto</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            background-color: #ffffff;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .header img {
+            height: 50px;
+            margin-right: 20px;
+        }
+
+        .header h1 {
+            margin: 0;
+            color: #333;
+            font-size: 24px;
+        }
+
+        .header a {
+            text-decoration: none;
+            color: white;
+            background-color: #4CAF50;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .header a:hover {
+            background-color: #45a049;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            color: #555;
+            margin: 10px 0 5px;
+        }
+
+        input[type="text"] {
+            width: 99%;
+            padding: 10px;
+            margin: 5px 0 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            color: #333;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+    </style>
 </head>
+
 <body>
 
-<h1>Aggiungi Impianto</h1>
+    <!-- Barra superiore con il logo e il pulsante Home -->
+    <div class="header">
+        <div style="display: flex; align-items: center;">
+            <img src="{{ url_for('static', filename='logo_staf_piccolo.jpg') }}" alt="Logo">
+            <h1>Aggiungi Impianto</h1>
+        </div>
+        <a href="{{ url_for('home') }}">Torna alla Homepage</a>
+    </div>
 
-<form method="POST">
-    <label for="nome_impianto">Nome Impianto:</label>
-    <input type="text" name="nome_impianto" required><br>
+    <!-- Contenuto principale del modulo -->
+    <div class="container">
+        <form method="POST" action="{{ url_for('aggiungi_impianto') }}">
+            <div class="form-group">
+                <label for="nome_impianto">Nome Impianto</label>
+                <input type="text" name="nome_impianto" required>
+            </div>
 
-    <label for="indirizzo_impianto">Indirizzo Impianto:</label>
-    <input type="text" name="indirizzo_impianto" required><br>
+            <div class="form-group">
+                <label for="indirizzo_impianto">Indirizzo Impianto</label>
+                <input type="text" name="indirizzo_impianto" required>
+            </div>
 
-    <button type="submit">Aggiungi Impianto</button>
-</form>
+            <button type="submit">Aggiungi Impianto</button>
+        </form>
+    </div>
 
 </body>
+
 </html>
