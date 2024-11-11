@@ -1,20 +1,27 @@
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <title>Aggiungi Produttore</title>
 </head>
+
 <body>
 
-<h1>Aggiungi Produttore</h1>
+    <h1>Aggiungi Produttore</h1>
 
-<form method="POST">
-    <label for="nome_produttore">Nome Produttore:</label>
-    <input type="text" name="nome_produttore" required><br>
+    <form method="POST">
+        <label for="nome_produttore">Nome Produttore:</label>
+        <input type="text" name="nome_produttore" required><br>
 
-    <button type="submit">Aggiungi Produttore</button>
-</form>
+        <label for="nome_produttore">Indirizzo Produttore:</label>
+        <input type="text" name="indirizzo_produttore" required><br>
+
+        <button type="submit">Aggiungi Produttore</button>
+    </form>
 
 </body>
+
 </html>

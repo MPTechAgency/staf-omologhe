@@ -88,7 +88,7 @@ def aggiungi_omologa():
         conn = get_db_connection()
         conn.execute('INSERT INTO documenti (nome_produttore, impianto_destinazione, indirizzo_cantiere, codice_eer, data_invio, data_accettazione, data_scadenza) VALUES (?, ?, ?, ?, ?, ?, ?)', 
                      (nome_produttore, impianto_destinazione, indirizzo_cantiere, codice_eer, data_invio, data_accettazione, data_scadenza))
-        conn.commit()
+        conn.commit() 
         conn.close()
         flash('Omologa aggiunta con successo!', 'success')
         return redirect(url_for('lista_omologhe'))
@@ -98,20 +98,32 @@ def aggiungi_omologa():
 
 
 # Lista Produttori: Visualizza tutti i produttori
+@app.route('/lista_produttori', methods=['GET'])
+def lista_produttori():
+    # Connessione al database
+    with get_db_connection() as conn:
+        # Recupera tutti i produttori dal database
+        produttori = conn.execute('SELECT * FROM produttori').fetchall()
+
+    # Passa i dati alla template per la visualizzazione
+    return render_template('lista_produttori.html', produttori=produttori)
+
+
 # Usa con 'with' per gestire automaticamente la connessione
 @app.route('/aggiungi_produttore', methods=['GET', 'POST'])
 def aggiungi_produttore():
     if request.method == 'POST':
         nome_produttore = request.form['nome_produttore']
-        
+        indirizzo_produttore = request.form['indirizzo_produttore']
+
         with get_db_connection() as conn:
-            conn.execute('INSERT INTO produttori (nome_produttore, indirizzo_produttore) VALUES (?)', (nome_produttore, indirizzo_produttore))
+            conn.execute('INSERT INTO produttori (nome_produttore, indirizzo_produttore) VALUES (?, ?)', (nome_produttore, indirizzo_produttore))
             conn.commit()
 
         flash('Produttore aggiunto con successo!', 'success')
-        return redirect(url_for('lista_produttori'))
+        return redirect(url_for('lista_produttori.html'))
     
-    return render_template('aggiungi_produttore.html')
+    return render_template('aggiungi_produttore.html') 
 
 
 # Lista Impianti: Visualizza tutti gli impianti
@@ -166,7 +178,7 @@ def edit_document(document_id):
         conn.close()
 
         flash('Omologa modificata con successo!', 'success')
-        return redirect(url_for('lista_omologhe'))
+        return redirect(url_for('lista_omologhe.html'))
 
     conn.close()
     return render_template('edit.html', documento=documento)
@@ -208,7 +220,7 @@ def delete_documents():
     else:
         flash('Nessun documento selezionato per l\'eliminazione', 'warning')
 
-    return redirect(url_for('omologhe_lista'))
+    return redirect(url_for('lista_omologhe'))
 
 
 if __name__ == '__main__':
