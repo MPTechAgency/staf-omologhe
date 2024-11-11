@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from apscheduler.schedulers.background import BackgroundScheduler
 import ssl
 
 app = Flask(__name__)
@@ -40,9 +41,9 @@ def calcola_data_scadenza(data_accettazione):
 # Funzione per inviare l'email di notifica
 def send_email(subject, body):
     try:
-        sender_email = "test@test.it"
-        receiver_email = "test-invio@test.it"
-        password = "Password-test"
+        sender_email = "test@test.it"  # Cambia con l'email del mittente
+        receiver_email = "test-invio@test.it"  # Cambia con l'email del destinatario
+        password = "Password-test"  # Cambia con la password dell'email
 
         msg = MIMEMultipart()
         msg['From'] = sender_email
@@ -58,6 +59,45 @@ def send_email(subject, body):
         print(f"Email inviata a {receiver_email}")
     except Exception as e:
         print(f"Errore durante l'invio dell'email: {e}")
+
+
+def check_expiring_documents():
+    conn = get_db_connection()
+    oggi = datetime.now()
+    trenta_giorni = oggi + timedelta(days=30)
+    cinque_giorni = oggi + timedelta(days=5)
+    
+    # Verifica documenti in scadenza tra oggi e 30 giorni
+    documenti_30 = conn.execute('''
+        SELECT * FROM documenti WHERE data_scadenza BETWEEN ? AND ?
+    ''', (oggi, trenta_giorni)).fetchall()
+    
+    # Verifica documenti in scadenza tra 5 e 30 giorni
+    documenti_5 = conn.execute('''
+        SELECT * FROM documenti WHERE data_scadenza BETWEEN ? AND ?
+    ''', (cinque_giorni, trenta_giorni)).fetchall()
+
+    # Invia email per documenti che scadono in 30 giorni
+    for doc in documenti_30:
+        subject = f"Alert: Il documento di {doc['nome_produttore']} sta per scadere tra 30 giorni"
+        body = f"Il documento di {doc['nome_produttore']} sta per scadere il {doc['data_scadenza']}."
+        send_email(subject, body)
+
+    # Invia email per documenti che scadono in 5 giorni
+    for doc in documenti_5:
+        subject = f"Alert: Il documento di {doc['nome_produttore']} sta per scadere tra 5 giorni"
+        body = f"Il documento di {doc['nome_produttore']} sta per scadere il {doc['data_scadenza']} tra 5 giorni."
+        send_email(subject, body)
+
+    conn.close()
+
+
+# Pianifica la funzione per eseguire ogni giorno
+scheduler = BackgroundScheduler()
+scheduler.add_job(check_expiring_documents, 'interval', days=1)
+scheduler.start()
+
+print("Scheduler avviato. L'alert verrà inviato ogni giorno.")
 
 # Homepage
 @app.route('/')
