@@ -23,4 +23,4 @@
 ## TODO
 
 - stile css dark mode
-- Capire perché nella lista_produttori non si veda il contenuto della tabella però quando si aggiungono produttori aumentino le righe.
+- La data di Accettazione può non essere immessa subito
