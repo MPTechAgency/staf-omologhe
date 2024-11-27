@@ -22,6 +22,20 @@ def get_db_connection():
     conn.execute('PRAGMA journal_mode=WAL;')
     return conn
 
+# Funzione per gestire la conversione della data
+def convert_date(date_string):
+    if isinstance(date_string, str):
+        try:
+            # Prova a fare il parsing con il formato completo (data e ora)
+            return datetime.strptime(date_string, '%Y-%m-%d %H:%M:%S')
+        except ValueError:
+            try:
+                # Se fallisce, prova a fare il parsing solo con la data
+                return datetime.strptime(date_string, '%Y-%m-%d')
+            except ValueError:
+                print(f"Formato data non riconosciuto: {date_string}")
+                return None
+    return date_string
 
 # Funzione per verificare se il documento è scaduto
 def isExpired(data_scadenza):
@@ -30,15 +44,18 @@ def isExpired(data_scadenza):
         return data_scadenza < datetime.now()
     # Se data_scadenza è una stringa, convertila prima in datetime
     elif isinstance(data_scadenza, str):
-        data_scadenza = datetime.strptime(data_scadenza, '%Y-%m-%d')
-        return data_scadenza < datetime.now()
+        data_scadenza = convert_date(data_scadenza)
+        if data_scadenza:
+            return data_scadenza < datetime.now()
+        else:
+            return False
     return False  # Ritorna False se data_scadenza non è né str né datetime
 
-# Calcolo automatico della data di scadenza (365 giorni dopo la data di accettazione)
+# Calcolo automatico della data di scadenza (1 anno dopo la data di accettazione)
 def calcola_data_scadenza(data_accettazione):
-    data_accettazione_dt = datetime.strptime(data_accettazione, '%Y-%m-%d')
+    data_accettazione_dt = convert_date(data_accettazione)
     scadenza = data_accettazione_dt + relativedelta(years=1)
-    return scadenza.strftime('%Y-%m-%d')  # Restituisce la data nel formato 'YYYY-MM-DD'  
+    return scadenza.strftime('%Y-%m-%d')  # Restituisce la data nel formato 'YYYY-MM-DD'
 
 # Funzione per inviare l'email di notifica
 def send_email(subject, body):
@@ -62,22 +79,21 @@ def send_email(subject, body):
     except Exception as e:
         print(f"Errore durante l'invio dell'email: {e}")
 
-
 def check_expiring_documents():
     conn = get_db_connection()
     oggi = datetime.now()
     trenta_giorni = oggi + timedelta(days=30)
     cinque_giorni = oggi + timedelta(days=5)
-    
+
     # Verifica documenti in scadenza tra oggi e 30 giorni
     documenti_30 = conn.execute('''
         SELECT * FROM documenti WHERE data_scadenza BETWEEN ? AND ?
-    ''', (oggi, trenta_giorni)).fetchall()
-    
+    ''', (oggi.strftime('%Y-%m-%d'), trenta_giorni.strftime('%Y-%m-%d'))).fetchall()
+
     # Verifica documenti in scadenza tra 5 e 30 giorni
     documenti_5 = conn.execute('''
         SELECT * FROM documenti WHERE data_scadenza BETWEEN ? AND ?
-    ''', (cinque_giorni, trenta_giorni)).fetchall()
+    ''', (cinque_giorni.strftime('%Y-%m-%d'), trenta_giorni.strftime('%Y-%m-%d'))).fetchall()
 
     # Invia email per documenti che scadono in 30 giorni
     for doc in documenti_30:
@@ -93,7 +109,6 @@ def check_expiring_documents():
 
     conn.close()
 
-
 # Pianifica la funzione per eseguire ogni giorno
 scheduler = BackgroundScheduler()
 scheduler.add_job(check_expiring_documents, 'interval', days=1)
@@ -104,66 +119,63 @@ print("Scheduler avviato. L'alert verrà inviato ogni giorno.")
 # Homepage
 @app.route('/')
 def home():
-        return render_template('index.html')
-
+    return render_template('index.html')
 
 # Lista Omologhe: Visualizza tutti i documenti
 @app.route('/omologhe', methods=['GET'])
 def lista_omologhe():
-    query = request.args.get('query', '')  # Ottieni la query di ricerca dalla richiesta, se presente
-    conn = get_db_connection()
+    try:
+        query = request.args.get('query', '')  # Ottieni la query di ricerca dalla richiesta, se presente
+        conn = get_db_connection()
 
-    # Esegui la query SQL con la ricerca
-    if query:
-        # Usa LIKE per cercare in nome_produttore, indirizzo_cantiere, codice_eer, impianto_destinazione
-        documenti = conn.execute('''SELECT * FROM documenti WHERE
-            nome_produttore LIKE ? OR impianto_destinazione LIKE ? OR indirizzo_cantiere LIKE ? OR codice_eer LIKE ?''',
-            ('%' + query + '%',) * 4).fetchall()
-    else:
-        # Se non c'è query, prendi tutti i documenti
-        documenti = conn.execute('SELECT * FROM documenti').fetchall()
+        # Esegui la query SQL con la ricerca
+        if query:
+            # Usa LIKE per cercare in nome_produttore, indirizzo_cantiere, codice_eer, impianto_destinazione
+            documenti = conn.execute('''SELECT * FROM documenti WHERE
+                nome_produttore LIKE ? OR impianto_destinazione LIKE ? OR indirizzo_cantiere LIKE ? OR codice_eer LIKE ?''',
+                ('%' + query + '%',) * 4).fetchall()
+        else:
+            # Se non c'è query, prendi tutti i documenti
+            documenti = conn.execute('SELECT * FROM documenti').fetchall()
 
-    conn.close()
+        conn.close()
 
-    # Crea una nuova lista di dizionari mutabili
-    documenti_formattati = []
+        # Crea una nuova lista di dizionari mutabili
+        documenti_formattati = []
 
-    # Funzione per gestire la conversione della data
-    def convert_date(date_string):
-    if isinstance(date_string, str):
-        try:
-            # Prova a fare il parsing con il formato completo (data e ora)
-            return datetime.strptime(date_string, '%Y-%m-%d %H:%M:%S')
-        except ValueError:
-            # Se fallisce, prova a fare il parsing solo con la data
-            return datetime.strptime(date_string, '%Y-%m-%d')
-    return date_string
+        # Converte le date in oggetti datetime, se necessario
+        for documento in documenti:
+            documento_dict = dict(documento)  # Converte in dizionario mutabile
 
-    # Converte le date in oggetti datetime, se necessario
-    for documento in documenti:
-        documento_dict = dict(documento)  # Converte in dizionario mutabile
+            # Converte i campi data_invio, data_accettazione, data_scadenza
+            documento_dict['data_invio'] = convert_date(documento_dict.get('data_invio'))
+            documento_dict['data_accettazione'] = convert_date(documento_dict.get('data_accettazione'))
+            documento_dict['data_scadenza'] = convert_date(documento_dict.get('data_scadenza'))
 
-        # Converte i campi data_invio, data_accettazione, data_scadenza
-        documento_dict['data_invio'] = convert_date(documento_dict.get('data_invio'))
-        documento_dict['data_accettazione'] = convert_date(documento_dict.get('data_accettazione'))
-        documento_dict['data_scadenza'] = convert_date(documento_dict.get('data_scadenza'))
+            # Verifica che le date non siano None
+            if None in (documento_dict['data_invio'], documento_dict['data_accettazione'], documento_dict['data_scadenza']):
+                print(f"Date non valide per il documento ID {documento_dict.get('id')}")
+                continue  # Salta questo documento
 
-        # Aggiungi il documento formattato alla lista
-        documenti_formattati.append(documento_dict)
+            # Aggiungi il documento formattato alla lista
+            documenti_formattati.append(documento_dict)
 
-    return render_template('lista_omologhe.html', documenti=documenti_formattati, query=query, isExpired=isExpired)
+        return render_template('lista_omologhe.html', documenti=documenti_formattati, query=query, isExpired=isExpired)
+    except Exception as e:
+        print(f"Errore in lista_omologhe: {e}")
+        return str(e), 500
 
 # Aggiungi Omologa: Modifica o aggiungi un nuovo documento
 @app.route('/aggiungi_omologa', methods=['GET', 'POST'])
 def aggiungi_omologa():
     conn = get_db_connection()
-    
+
     # Recupera la lista dei produttori
     produttori = conn.execute('SELECT * FROM produttori').fetchall()
-    
+
     # Recupera la lista degli impianti
     impianti = conn.execute('SELECT * FROM impianti').fetchall()
-    
+
     conn.close()
 
     if request.method == 'POST':
@@ -178,7 +190,7 @@ def aggiungi_omologa():
 
         # Calcola la data di scadenza in base alla data di accettazione
         data_scadenza = calcola_data_scadenza(data_accettazione)
-        
+
         # Riapri la connessione per l'operazione di aggiornamento o inserimento
         conn = get_db_connection()
 
@@ -191,7 +203,7 @@ def aggiungi_omologa():
                                 data_invio = ?, 
                                 data_accettazione = ?, 
                                 data_scadenza = ?, 
-                                indirizzo_cantiere = ?  -- Aggiungi indirizzo_cantiere
+                                indirizzo_cantiere = ?
                             WHERE id = ?''', 
                             (nome_produttore, impianto_destinazione, codice_eer, data_invio, data_accettazione, data_scadenza, indirizzo_cantiere, document_id))
         else:
@@ -202,10 +214,10 @@ def aggiungi_omologa():
 
         conn.commit()  # Salviamo le modifiche nel database
         conn.close()   # Chiudiamo la connessione al database
-        
+
         flash('Omologa aggiunta con successo!', 'success')  # Messaggio di successo
         return redirect(url_for('lista_omologhe'))  # Reindirizza alla lista delle omologhe
-    
+
     # Se la richiesta è di tipo GET, renderizza il modulo di aggiunta
     return render_template('aggiungi_omologa.html', produttori=produttori, impianti=impianti)
 
@@ -216,7 +228,7 @@ def lista_produttori():
     query = request.args.get('query', '')
 
     conn = get_db_connection()
-    
+
     # Se c'è una query, filtra i produttori per nome
     if query:
         produttori = conn.execute('''
@@ -226,13 +238,13 @@ def lista_produttori():
     else:
         # Se non c'è query, restituisci tutti i produttori
         produttori = conn.execute('SELECT * FROM produttori').fetchall()
-    
+
     conn.close()
 
     # Passa i dati alla template per la visualizzazione
     return render_template('lista_produttori.html', produttori=produttori, query=query)
 
-# Usa con 'with' per gestire automaticamente la connessione
+# Aggiungi Produttore
 @app.route('/aggiungi_produttore', methods=['GET', 'POST'])
 def aggiungi_produttore():
     if request.method == 'POST':
@@ -245,9 +257,8 @@ def aggiungi_produttore():
 
         flash('Produttore aggiunto con successo!', 'success')
         return redirect(url_for('lista_produttori'))
-    
-    return render_template('aggiungi_produttore.html') 
 
+    return render_template('aggiungi_produttore.html')
 
 # Lista Impianti: Visualizza tutti gli impianti
 @app.route('/impianti', methods=['GET'])
@@ -256,7 +267,7 @@ def lista_impianti():
     query = request.args.get('query', '')
 
     conn = get_db_connection()
-    
+
     # Se c'è una query, filtra gli impianti per nome
     if query:
         impianti = conn.execute('''
@@ -266,18 +277,18 @@ def lista_impianti():
     else:
         # Se non c'è query, restituisci tutti gli impianti
         impianti = conn.execute('SELECT * FROM impianti').fetchall()
-    
+
     conn.close()
 
     # Passa i dati alla template per la visualizzazione
     return render_template('lista_impianti.html', impianti=impianti, query=query)
 
-# Aggiungi Impianto: Modifica o aggiungi un nuovo impianto
+# Aggiungi Impianto
 @app.route('/aggiungi_impianto', methods=['GET', 'POST'])
 def aggiungi_impianto():
     if request.method == 'POST':
         nome_impianto = request.form['nome_impianto']
-        indirizzo_impianto = request.form['indirizzo_impianto'] 
+        indirizzo_impianto = request.form['indirizzo_impianto']
 
         with get_db_connection() as conn:
             conn.execute('INSERT INTO impianti (nome_impianto, indirizzo_impianto) VALUES (?, ?)',
@@ -285,7 +296,6 @@ def aggiungi_impianto():
             conn.commit()
 
         flash('Impianto aggiunto con successo!', 'success')
-
 
         return redirect(url_for('lista_impianti'))
 
@@ -413,7 +423,7 @@ def delete_produttori():
     # Ottieni gli ID dei produttori selezionati dal form
     produttore_ids = request.form.getlist('produttore_ids')
     conn = get_db_connection()
-    
+
     if produttore_ids:
         for id in produttore_ids:
             conn.execute('DELETE FROM produttori WHERE id = ?', (id,))
@@ -424,7 +434,6 @@ def delete_produttori():
         flash('Nessun produttore selezionato per l\'eliminazione', 'warning')
 
     return redirect(url_for('lista_produttori'))
-
 
 if __name__ == '__main__':
     # Utilizzo di HTTPS con un certificato autofirmato
