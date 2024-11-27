@@ -130,14 +130,14 @@ def lista_omologhe():
 
     # Funzione per gestire la conversione della data
     def convert_date(date_string):
-        if isinstance(date_string, str):
-            try:
-                # Prova a fare il parsing con il formato completo (data e ora)
-                return datetime.strptime(date_string, '%Y-%m-%d %H:%M:%S')
-            except ValueError:
-                # Se fallisce, prova a fare il parsing solo con la data
-                return datetime.strptime(date_string, '%Y-%m-%d')
-        return date_string
+    if isinstance(date_string, str):
+        try:
+            # Prova a fare il parsing con il formato completo (data e ora)
+            return datetime.strptime(date_string, '%Y-%m-%d %H:%M:%S')
+        except ValueError:
+            # Se fallisce, prova a fare il parsing solo con la data
+            return datetime.strptime(date_string, '%Y-%m-%d')
+    return date_string
 
     # Converte le date in oggetti datetime, se necessario
     for documento in documenti:
@@ -310,13 +310,10 @@ def modifica_omologa(documento_id):
     # Convertire il risultato in un dizionario per modificarlo
     documento = dict(documento)
 
-    # Se le date sono stringhe, convertili in oggetti datetime
-    if isinstance(documento['data_invio'], str):
-        documento['data_invio'] = datetime.strptime(documento['data_invio'], '%Y-%m-%d')
-    if isinstance(documento['data_accettazione'], str):
-        documento['data_accettazione'] = datetime.strptime(documento['data_accettazione'], '%Y-%m-%d')
-    if isinstance(documento['data_scadenza'], str):
-        documento['data_scadenza'] = datetime.strptime(documento['data_scadenza'], '%Y-%m-%d')
+    # Utilizza la funzione convert_date per gestire le date
+    documento['data_invio'] = convert_date(documento.get('data_invio'))
+    documento['data_accettazione'] = convert_date(documento.get('data_accettazione'))
+    documento['data_scadenza'] = convert_date(documento.get('data_scadenza'))
 
     if request.method == 'POST':
         # Ricevi i dati modificati dal form
@@ -327,12 +324,12 @@ def modifica_omologa(documento_id):
         data_invio = request.form['data_invio']
         data_accettazione = request.form['data_accettazione']
 
-        # Converte le date da stringa a datetime
-        data_invio = datetime.strptime(data_invio, '%Y-%m-%d')
-        data_accettazione = datetime.strptime(data_accettazione, '%Y-%m-%d')
+        # Converte le date da stringa a datetime utilizzando convert_date
+        data_invio = convert_date(data_invio)
+        data_accettazione = convert_date(data_accettazione)
 
-        # Calcolare la data di scadenza automaticamente (ad esempio, 30 giorni dopo la data di accettazione)
-        data_scadenza = data_accettazione + timedelta(days=30)
+        # Calcolare la data di scadenza automaticamente (1 anno dopo la data di accettazione)
+        data_scadenza = data_accettazione + relativedelta(years=1)
 
         # Esegui l'aggiornamento nel database
         conn = get_db_connection()
@@ -341,7 +338,13 @@ def modifica_omologa(documento_id):
             SET nome_produttore = ?, impianto_destinazione = ?, indirizzo_cantiere = ?, codice_eer = ?, 
                 data_invio = ?, data_accettazione = ?, data_scadenza = ?
             WHERE id = ?
-        ''', (nome_produttore, impianto_destinazione, indirizzo_cantiere, codice_eer, data_invio, data_accettazione, data_scadenza, documento_id))
+        ''', (
+            nome_produttore, impianto_destinazione, indirizzo_cantiere, codice_eer,
+            data_invio.strftime('%Y-%m-%d %H:%M:%S'),
+            data_accettazione.strftime('%Y-%m-%d %H:%M:%S'),
+            data_scadenza.strftime('%Y-%m-%d %H:%M:%S'),
+            documento_id
+        ))
         conn.commit()
         conn.close()
 
