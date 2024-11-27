@@ -5,6 +5,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from apscheduler.schedulers.background import BackgroundScheduler
+from dateutil.relativedelta import relativedelta
 import ssl
 
 app = Flask(__name__)
@@ -35,8 +36,9 @@ def isExpired(data_scadenza):
 
 # Calcolo automatico della data di scadenza (365 giorni dopo la data di accettazione)
 def calcola_data_scadenza(data_accettazione):
-    scadenza = datetime.strptime(data_accettazione, '%Y-%m-%d') + timedelta(days=365)
-    return scadenza.strftime('%Y-%m-%d')  # Restituisce solo la data nel formato 'YYYY-MM-DD'
+    data_accettazione_dt = datetime.strptime(data_accettazione, '%Y-%m-%d')
+    scadenza = data_accettazione_dt + relativedelta(years=1)
+    return scadenza.strftime('%Y-%m-%d')  # Restituisce la data nel formato 'YYYY-MM-DD'  
 
 # Funzione per inviare l'email di notifica
 def send_email(subject, body):
