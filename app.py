@@ -221,86 +221,6 @@ def aggiungi_omologa():
     # Se la richiesta è di tipo GET, renderizza il modulo di aggiunta
     return render_template('aggiungi_omologa.html', produttori=produttori, impianti=impianti)
 
-# Lista Produttori: Visualizza tutti i produttori
-@app.route('/lista_produttori', methods=['GET'])
-def lista_produttori():
-    # Ottieni il parametro di ricerca 'query' dalla richiesta GET (se esiste)
-    query = request.args.get('query', '')
-
-    conn = get_db_connection()
-
-    # Se c'è una query, filtra i produttori per nome
-    if query:
-        produttori = conn.execute('''
-            SELECT * FROM produttori
-            WHERE nome_produttore LIKE ?
-        ''', ('%' + query + '%',)).fetchall()
-    else:
-        # Se non c'è query, restituisci tutti i produttori
-        produttori = conn.execute('SELECT * FROM produttori').fetchall()
-
-    conn.close()
-
-    # Passa i dati alla template per la visualizzazione
-    return render_template('lista_produttori.html', produttori=produttori, query=query)
-
-# Aggiungi Produttore
-@app.route('/aggiungi_produttore', methods=['GET', 'POST'])
-def aggiungi_produttore():
-    if request.method == 'POST':
-        nome_produttore = request.form['nome_produttore']
-        indirizzo_produttore = request.form['indirizzo_produttore']
-
-        with get_db_connection() as conn:
-            conn.execute('INSERT INTO produttori (nome_produttore, indirizzo_produttore) VALUES (?, ?)', (nome_produttore, indirizzo_produttore))
-            conn.commit()
-
-        flash('Produttore aggiunto con successo!', 'success')
-        return redirect(url_for('lista_produttori'))
-
-    return render_template('aggiungi_produttore.html')
-
-# Lista Impianti: Visualizza tutti gli impianti
-@app.route('/impianti', methods=['GET'])
-def lista_impianti():
-    # Ottieni il parametro di ricerca 'query' dalla richiesta GET (se esiste)
-    query = request.args.get('query', '')
-
-    conn = get_db_connection()
-
-    # Se c'è una query, filtra gli impianti per nome
-    if query:
-        impianti = conn.execute('''
-            SELECT * FROM impianti
-            WHERE nome_impianto LIKE ?
-        ''', ('%' + query + '%',)).fetchall()
-    else:
-        # Se non c'è query, restituisci tutti gli impianti
-        impianti = conn.execute('SELECT * FROM impianti').fetchall()
-
-    conn.close()
-
-    # Passa i dati alla template per la visualizzazione
-    return render_template('lista_impianti.html', impianti=impianti, query=query)
-
-# Aggiungi Impianto
-@app.route('/aggiungi_impianto', methods=['GET', 'POST'])
-def aggiungi_impianto():
-    if request.method == 'POST':
-        nome_impianto = request.form['nome_impianto']
-        indirizzo_impianto = request.form['indirizzo_impianto']
-
-        with get_db_connection() as conn:
-            conn.execute('INSERT INTO impianti (nome_impianto, indirizzo_impianto) VALUES (?, ?)',
-                         (nome_impianto, indirizzo_impianto))
-            conn.commit()
-
-        flash('Impianto aggiunto con successo!', 'success')
-
-        return redirect(url_for('lista_impianti'))
-
-    return render_template('aggiungi_impianto.html')
-
 # Modifica un documento esistente
 @app.route('/modifica_omologa/<int:documento_id>', methods=['GET', 'POST'])
 def modifica_omologa(documento_id):
@@ -363,6 +283,161 @@ def modifica_omologa(documento_id):
 
     # Passa i dati al template
     return render_template('modifica_omologa.html', documento=documento, produttori=produttori, impianti=impianti)
+
+
+# Lista Produttori: Visualizza tutti i produttori
+@app.route('/lista_produttori', methods=['GET'])
+def lista_produttori():
+    # Ottieni il parametro di ricerca 'query' dalla richiesta GET (se esiste)
+    query = request.args.get('query', '')
+
+    conn = get_db_connection()
+
+    # Se c'è una query, filtra i produttori per nome
+    if query:
+        produttori = conn.execute('''
+            SELECT * FROM produttori
+            WHERE nome_produttore LIKE ?
+        ''', ('%' + query + '%',)).fetchall()
+    else:
+        # Se non c'è query, restituisci tutti i produttori
+        produttori = conn.execute('SELECT * FROM produttori').fetchall()
+
+    conn.close()
+
+    # Passa i dati alla template per la visualizzazione
+    return render_template('lista_produttori.html', produttori=produttori, query=query)
+
+# Aggiungi Produttore
+@app.route('/aggiungi_produttore', methods=['GET', 'POST'])
+def aggiungi_produttore():
+    if request.method == 'POST':
+        nome_produttore = request.form['nome_produttore']
+        indirizzo_produttore = request.form['indirizzo_produttore']
+
+        with get_db_connection() as conn:
+            conn.execute('INSERT INTO produttori (nome_produttore, indirizzo_produttore) VALUES (?, ?)', (nome_produttore, indirizzo_produttore))
+            conn.commit()
+
+        flash('Produttore aggiunto con successo!', 'success')
+        return redirect(url_for('lista_produttori'))
+
+    return render_template('aggiungi_produttore.html')
+
+# Modifica un produttore esistente
+@app.route('/modifica_produttore/<int:produttore_id>', methods=['GET', 'POST'])
+def modifica_produttore(produttore_id):
+    conn = get_db_connection()
+    
+    # Recupera il produttore dal database
+    produttore = conn.execute('SELECT * FROM produttori WHERE id = ?', (produttore_id,)).fetchone()
+    if produttore is None:
+        conn.close()
+        return 'Produttore non trovato', 404
+
+    # Convertire il risultato in un dizionario per modificarlo
+    produttore = dict(produttore)
+    
+    if request.method == 'POST':
+        # Ricevi i dati modificati dal form
+        nome_produttore = request.form['nome_produttore']
+        indirizzo_produttore = request.form['indirizzo_produttore']
+
+        # Esegui l'aggiornamento nel database
+        conn.execute('''
+            UPDATE produttori
+            SET nome_produttore = ?, indirizzo_produttore = ?
+            WHERE id = ?
+        ''', (nome_produttore, indirizzo_produttore, produttore_id))
+        conn.commit()
+        conn.close()
+
+        flash('Produttore aggiornato con successo!', 'success')
+        # Reindirizza alla lista dei produttori dopo la modifica
+        return redirect(url_for('lista_produttori'))
+    
+    conn.close()
+    # Passa i dati al template
+    return render_template('modifica_produttore.html', produttore=produttore)
+
+# Lista Impianti: Visualizza tutti gli impianti
+@app.route('/impianti', methods=['GET'])
+def lista_impianti():
+    # Ottieni il parametro di ricerca 'query' dalla richiesta GET (se esiste)
+    query = request.args.get('query', '')
+
+    conn = get_db_connection()
+
+    # Se c'è una query, filtra gli impianti per nome
+    if query:
+        impianti = conn.execute('''
+            SELECT * FROM impianti
+            WHERE nome_impianto LIKE ?
+        ''', ('%' + query + '%',)).fetchall()
+    else:
+        # Se non c'è query, restituisci tutti gli impianti
+        impianti = conn.execute('SELECT * FROM impianti').fetchall()
+
+    conn.close()
+
+    # Passa i dati alla template per la visualizzazione
+    return render_template('lista_impianti.html', impianti=impianti, query=query)
+
+# Aggiungi Impianto
+@app.route('/aggiungi_impianto', methods=['GET', 'POST'])
+def aggiungi_impianto():
+    if request.method == 'POST':
+        nome_impianto = request.form['nome_impianto']
+        indirizzo_impianto = request.form['indirizzo_impianto']
+
+        with get_db_connection() as conn:
+            conn.execute('INSERT INTO impianti (nome_impianto, indirizzo_impianto) VALUES (?, ?)',
+                         (nome_impianto, indirizzo_impianto))
+            conn.commit()
+
+        flash('Impianto aggiunto con successo!', 'success')
+
+        return redirect(url_for('lista_impianti'))
+
+    return render_template('aggiungi_impianto.html')
+
+# Modifica un impianto esistente
+@app.route('/modifica_impianto/<int:impianto_id>', methods=['GET', 'POST'])
+def modifica_impianto(impianto_id):
+    conn = get_db_connection()
+    
+    # Recupera l'impianto dal database
+    impianto = conn.execute('SELECT * FROM impianti WHERE id = ?', (impianto_id,)).fetchone()
+    if impianto is None:
+        conn.close()
+        return 'Impianto non trovato', 404
+
+    # Convertire il risultato in un dizionario per modificarlo
+    impianto = dict(impianto)
+    
+    if request.method == 'POST':
+        # Ricevi i dati modificati dal form
+        nome_impianto = request.form['nome_impianto']
+        indirizzo_impianto = request.form['indirizzo_impianto']
+
+        # Esegui l'aggiornamento nel database
+        conn.execute('''
+            UPDATE impianti
+            SET nome_impianto = ?, indirizzo_impianto = ?
+            WHERE id = ?
+        ''', (nome_impianto, indirizzo_impianto, impianto_id))
+        conn.commit()
+        conn.close()
+
+        flash('Impianto aggiornato con successo!', 'success')
+        # Reindirizza alla lista degli impianti dopo la modifica
+        return redirect(url_for('lista_impianti'))
+    
+    conn.close()
+    # Passa i dati al template
+    return render_template('modifica_impianto.html', impianto=impianto)
+
+
 
 # Ricerca documenti
 @app.route('/search', methods=['GET'])

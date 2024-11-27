@@ -116,6 +116,20 @@
         .search-form button:hover {
             background-color: #45a049;
         }
+
+        /* Stile per il pulsante di modifica */
+        .edit-button {
+            background-color: #FFEB3B;
+            color: black;
+            padding: 8px 16px;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .edit-button:hover {
+            background-color: #FBC02D;
+        }
     </style>
 
     <script>
@@ -158,6 +172,7 @@
                         <th><input type="checkbox" onclick="toggleSelectAll(this)"></th>
                         <th>Nome Produttore</th>
                         <th>Indirizzo</th>
+                        <th>Azioni</th> <!-- Aggiunta della colonna Azioni -->
                     </tr>
                 </thead>
                 <tbody>
@@ -169,11 +184,15 @@
                                 class="produttore-checkbox"></td>
                         <td>{{ produttore.nome_produttore }}</td>
                         <td>{{ produttore.indirizzo_produttore }}</td>
+                        <td>
+                            <a href="{{ url_for('modifica_produttore', produttore_id=produttore.id) }}"
+                                class="edit-button">Modifica</a>
+                        </td> <!-- Aggiunta del pulsante Modifica -->
                     </tr>
                     {% endfor %}
                     {% else %}
                     <tr>
-                        <td colspan="3" style="text-align: center;">Nessun produttore trovato.</td>
+                        <td colspan="4" style="text-align: center;">Nessun produttore trovato.</td>
                     </tr>
                     {% endif %}
                 </tbody>
