@@ -80,50 +80,45 @@
             transform: scale(1.05);
         }
 
-        /* Modalità Scura */
-        .dark-mode {
-            background-color: #181818;
-            color: #f4f4f4;
+        /* Sezione Ricerca */
+        .search-section {
+            margin: 20px;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
-        .dark-mode .header {
-            background-color: #333;
-            border-bottom: 2px solid #444;
+        .search-section h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
         }
 
-        .dark-mode .header h1 {
-            color: #f4f4f4;
+        .search-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .dark-mode .column {
-            background-color: #333;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        .search-bar input[type="text"] {
+            width: 80%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
         }
 
-        .dark-mode .button {
-            background-color: #555;
-        }
-
-        .dark-mode .button:hover {
-            background-color: #666;
-        }
-
-        /* Toggle Button */
-        .dark-mode-toggle {
+        .search-bar button {
+            padding: 10px 20px;
             background-color: #4CAF50;
             color: white;
             border: none;
-            padding: 10px 20px;
             border-radius: 5px;
             cursor: pointer;
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 100;
-            transition: background-color 0.3s;
+            font-size: 16px;
         }
 
-        .dark-mode-toggle:hover {
+        .search-bar button:hover {
             background-color: #45a049;
         }
     </style>
@@ -137,8 +132,14 @@
         <h1>Benvenuto nel sistema di gestione delle Omologhe</h1>
     </div>
 
-    <!-- Bottone per attivare/disattivare la modalità scura -->
-    <button class="dark-mode-toggle" id="dark-mode-toggle">Modalità Scura</button>
+    <!-- Sezione di ricerca -->
+    <div class="search-section">
+        <h2>Ricerca Generale</h2>
+        <form method="GET" action="{{ url_for('ricerca_generale') }}" class="search-bar">
+            <input type="text" name="query" placeholder="Inserisci il nome del produttore...">
+            <button type="submit">Cerca</button>
+        </form>
+    </div>
 
     <!-- Contenuto principale della pagina -->
     <div class="container">
@@ -166,36 +167,6 @@
             <a href="{{ url_for('aggiungi_cassone') }}" class="button">Aggiungi Cassone</a>
         </div>
     </div>
-
-    <script>
-        // Funzione per abilitare/disabilitare la modalità scura
-        const toggleButton = document.getElementById('dark-mode-toggle');
-        const body = document.body;
-
-        // Verifica la preferenza salvata nel localStorage
-        const darkModePreferred = localStorage.getItem('dark-mode') === 'true';
-
-        // Imposta la modalità scura all'avvio della pagina se è preferita
-        if (darkModePreferred) {
-            body.classList.add('dark-mode');
-            toggleButton.textContent = 'Modalità Chiara';
-        } else {
-            body.classList.remove('dark-mode');
-            toggleButton.textContent = 'Modalità Scura';
-        }
-
-        // Event listener per il pulsante della modalità scura
-        toggleButton.addEventListener('click', () => {
-            body.classList.toggle('dark-mode');
-
-            // Salva la preferenza nel localStorage
-            const isDarkMode = body.classList.contains('dark-mode');
-            localStorage.setItem('dark-mode', isDarkMode);
-
-            // Cambia il testo del pulsante
-            toggleButton.textContent = isDarkMode ? 'Modalità Chiara' : 'Modalità Scura';
-        });
-    </script>
 
 </body>
 

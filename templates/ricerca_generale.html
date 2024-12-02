@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Risultati della Ricerca</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            background-color: #ffffff;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .header img {
+            height: 50px;
+            margin-right: 20px;
+        }
+
+        .header h1 {
+            margin: 0;
+            color: #333;
+            font-size: 24px;
+        }
+
+        .header a {
+            text-decoration: none;
+            color: white;
+            background-color: #4CAF50;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .header a:hover {
+            background-color: #45a049;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        .result-section {
+            margin: 20px 0;
+        }
+
+        .result-section h2 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .no-results {
+            font-size: 16px;
+            color: #999;
+            margin-top: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th,
+        td {
+            padding: 10px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .expired {
+            background-color: #FFCDD2;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Barra superiore con il logo e il pulsante Home -->
+    <div class="header">
+        <div style="display: flex; align-items: center;">
+            <img src="{{ url_for('static', filename='logo_staf_piccolo.jpg') }}" alt="Logo">
+            <h1>Risultati della Ricerca</h1>
+        </div>
+        <a href="{{ url_for('home') }}">Torna alla Homepage</a>
+    </div>
+
+    <!-- Contenuto principale della pagina -->
+    <div class="container">
+        <h2>Risultati della Ricerca per "{{ query }}"</h2>
+
+        <!-- Sezione Omologhe -->
+        <div class="result-section">
+            <h2>Omologhe</h2>
+            {% if omologhe %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nome Produttore</th>
+                        <th>Impianto Destinazione</th>
+                        <th>Indirizzo Cantiere</th>
+                        <th>Codice EER</th>
+                        <th>Data Invio</th>
+                        <th>Data Accettazione</th>
+                        <th>Data Scadenza</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for documento in omologhe %}
+                    <tr class="{{ 'expired' if documento.data_scadenza and documento.data_scadenza < now }}">
+                        <td>{{ documento.nome_produttore }}</td>
+                        <td>{{ documento.impianto_destinazione }}</td>
+                        <td>{{ documento.indirizzo_cantiere }}</td>
+                        <td>{{ documento.codice_eer }}</td>
+                        <td>{{ documento.data_invio.strftime('%d-%m-%Y') }}</td>
+                        <td>{{ documento.data_accettazione.strftime('%d-%m-%Y') }}</td>
+                        <td>{{ documento.data_scadenza.strftime('%d-%m-%Y') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="no-results">Nessuna omologa trovata per il termine di ricerca inserito.</p>
+            {% endif %}
+        </div>
+
+        <!-- Sezione Cassoni -->
+        <div class="result-section">
+            <h2>Cassoni</h2>
+            {% if cassoni %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nome Cliente</th>
+                        <th>Cantiere Destinazione</th>
+                        <th>Tipologia Cassone</th>
+                        <th>Altezza Cassone</th>
+                        <th>Data Consegna</th>
+                        <th>Data Ritiro</th>
+                        <th>Nome Referente</th>
+                        <th>Numero Telefono</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cassone in cassoni %}
+                    <tr>
+                        <td>{{ cassone.nome_cliente }}</td>
+                        <td>{{ cassone.cantiere_destinazione }}</td>
+                        <td>{{ cassone.tipologia_cassone }}</td>
+                        <td>{{ cassone.altezza_cassone }}</td>
+                        <td>{{ cassone.data_consegna.strftime('%d-%m-%Y') }}</td>
+                        <td>
+                            {% if cassone.data_ritiro %}
+                            {{ cassone.data_ritiro.strftime('%d-%m-%Y') }}
+                            {% else %}
+                            Non definita
+                            {% endif %}
+                        </td>
+                        <td>{{ cassone.nome_referente }}</td>
+                        <td>{{ cassone.numero_telefono }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="no-results">Nessun cassone trovato per il termine di ricerca inserito.</p>
+            {% endif %}
+        </div>
+    </div>
+
+</body>
+
+</html>

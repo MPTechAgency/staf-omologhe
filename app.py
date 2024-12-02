@@ -6,6 +6,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from apscheduler.schedulers.background import BackgroundScheduler
 from dateutil.relativedelta import relativedelta
+from fuzzywuzzy import process
 import ssl
 
 app = Flask(__name__)
@@ -50,6 +51,8 @@ def isExpired(data_scadenza):
         else:
             return False
     return False  # Ritorna False se data_scadenza non è né str né datetime
+
+app.jinja_env.globals.update(isExpired=isExpired)
 
 # Calcolo automatico della data di scadenza (1 anno dopo la data di accettazione)
 def calcola_data_scadenza(data_accettazione):
@@ -550,6 +553,83 @@ def search():
         ('%' + query + '%',) * 4).fetchall()
     conn.close()
     return render_template('search.html', documenti=documenti)
+
+
+@app.route('/ricerca', methods=['GET'])
+def ricerca_generale():
+    query = request.args.get('query', '').strip()
+    conn = get_db_connection()
+
+    # Recupera tutti i dati per la ricerca avanzata
+    omologhe_raw = conn.execute('SELECT * FROM documenti').fetchall()
+    cassoni_raw = conn.execute('SELECT * FROM cassoni').fetchall()
+
+    conn.close()
+
+    # Converte i risultati in liste di dizionari
+    def format_results(results, date_fields):
+        formatted = []
+        for row in results:
+            row_dict = dict(row)
+            for field in date_fields:
+                if row_dict.get(field):
+                    row_dict[field] = convert_date(row_dict[field])
+            formatted.append(row_dict)
+        return formatted
+
+    omologhe = format_results(omologhe_raw, ['data_invio', 'data_accettazione', 'data_scadenza'])
+    cassoni = format_results(cassoni_raw, ['data_consegna', 'data_ritiro'])
+
+    # Se l'utente ha inserito una query, filtra i risultati
+    if query:
+        def filter_results(results, fields):
+            return [
+                result for result in results
+                if any(query.lower() in str(result[field]).lower() for field in fields)
+            ]
+
+        # Filtra le omologhe
+        omologhe = filter_results(omologhe, ['nome_produttore'])
+
+        # Filtra i cassoni
+        cassoni = filter_results(cassoni, [
+            'nome_cliente', 'cantiere_destinazione', 'tipologia_cassone', 
+            'altezza_cassone', 'nome_referente', 'numero_telefono'
+        ])
+
+    # Funzione per ottenere corrispondenze fuzzy (opzionale)
+    def fuzzy_filter(results, fields):
+        from fuzzywuzzy import process  # Assicurati che fuzzywuzzy sia installato
+        all_values = [
+            (field, str(result[field]))
+            for result in results for field in fields if field in result
+        ]
+        matches = process.extract(query, [val[1] for val in all_values], limit=5)
+        matched_values = [value for value, score in matches if score > 50]  # Soglia 50
+        return [
+            result for result in results
+            if any(result[field] in matched_values for field in fields if field in result)
+        ]
+
+    # Applica il filtro fuzzy se necessario (facoltativo)
+    if not omologhe:
+        omologhe = fuzzy_filter(omologhe_raw, ['nome_produttore'])
+    if not cassoni:
+        cassoni = fuzzy_filter(cassoni_raw, [
+            'nome_cliente', 'cantiere_destinazione', 'tipologia_cassone', 
+            'altezza_cassone', 'nome_referente', 'numero_telefono'
+        ])
+
+    # Passa la data attuale al template per confronti
+    now = datetime.now()
+
+    return render_template(
+        'ricerca_generale.html',
+        query=query,
+        omologhe=omologhe,
+        cassoni=cassoni,
+        now=now
+    )
 
 # Eliminazione dei documenti selezionati
 @app.route('/delete', methods=['POST'])
