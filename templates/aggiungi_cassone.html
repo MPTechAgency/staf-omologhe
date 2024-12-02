@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aggiungi Cassone</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            background-color: #ffffff;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .header img {
+            height: 50px;
+            margin-right: 20px;
+        }
+
+        .header h1 {
+            margin: 0;
+            color: #333;
+            font-size: 24px;
+        }
+
+        .header a {
+            text-decoration: none;
+            color: white;
+            background-color: #4CAF50;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .header a:hover {
+            background-color: #45a049;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            color: #555;
+            margin: 10px 0 5px;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        select {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            color: #333;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group select,
+        .form-group input[type="text"],
+        .form-group input[type="date"] {
+            width: calc(100% - 22px);
+            /* Adjusting for padding */
+        }
+    </style>
+    <!-- Aggiungi il link al CSS di Select2 -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+</head>
+
+<body>
+
+    <!-- Barra superiore con il logo e il pulsante Home -->
+    <div class="header">
+        <div style="display: flex; align-items: center;">
+            <img src="{{ url_for('static', filename='logo_staf_piccolo.jpg') }}" alt="Logo">
+            <h1>Aggiungi Cassone</h1>
+        </div>
+        <a href="{{ url_for('home') }}">Torna alla Homepage</a>
+    </div>
+
+    <!-- Contenuto principale del modulo -->
+    <div class="container">
+        <form method="POST" action="{{ url_for('aggiungi_cassone') }}">
+            <!-- Campo per selezionare il cliente -->
+            <div class="form-group">
+                <label for="nome_cliente">Cliente</label>
+                <select name="nome_cliente" id="nome_cliente" required>
+                    <option value="">Seleziona un cliente</option>
+                    {% for produttore in produttori %}
+                    <option value="{{ produttore['nome_produttore'] }}">{{ produttore['nome_produttore'] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Campo per inserire il cantiere di destinazione -->
+            <div class="form-group">
+                <label for="cantiere_destinazione">Cantiere Destinazione</label>
+                <input type="text" name="cantiere_destinazione" required>
+            </div>
+
+            <!-- Campo per selezionare la tipologia di cassone -->
+            <div class="form-group">
+                <label for="tipologia_cassone">Tipologia Cassone</label>
+                <select name="tipologia_cassone" id="tipologia_cassone" required>
+                    <option value="">Seleziona una tipologia</option>
+                    <option value="Grande">Grande</option>
+                    <option value="Piccolo">Piccolo</option>
+                    <option value="3/4">3/4</option>
+                </select>
+            </div>
+
+            <!-- Campo per selezionare l'altezza del cassone -->
+            <div class="form-group">
+                <label for="altezza_cassone">Altezza Cassone</label>
+                <select name="altezza_cassone" id="altezza_cassone" required>
+                    <option value="">Seleziona un'altezza</option>
+                    <option value="Basso">Basso</option>
+                    <option value="Alto">Alto</option>
+                    <option value="Alto c/Cop">Alto c/Cop</option>
+                </select>
+            </div>
+
+            <!-- Campo per la data di consegna -->
+            <div class="form-group">
+                <label for="data_consegna">Data Consegna</label>
+                <input type="date" name="data_consegna" required>
+            </div>
+
+            <!-- Campo per la data di ritiro -->
+            <div class="form-group">
+                <label for="data_ritiro">Data Ritiro (opzionale)</label>
+                <input type="date" name="data_ritiro">
+            </div>
+
+            <!-- Campo per il nome del referente -->
+            <div class="form-group">
+                <label for="nome_referente">Nome Referente</label>
+                <input type="text" name="nome_referente" required>
+            </div>
+
+            <!-- Campo per il numero di telefono del referente -->
+            <div class="form-group">
+                <label for="numero_telefono">Numero Telefono</label>
+                <input type="text" name="numero_telefono" required>
+            </div>
+
+            <button type="submit">Aggiungi Cassone</button>
+        </form>
+    </div>
+
+    <!-- Aggiungi il link al JS di Select2 -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+
+    <!-- Inizializzazione Select2 -->
+    <script>
+        $(document).ready(function () {
+            // Inizializza Select2 per i campi di selezione
+            $('#nome_cliente').select2({
+                placeholder: "Seleziona un cliente",
+                allowClear: true
+            });
+
+            $('#tipologia_cassone').select2({
+                placeholder: "Seleziona una tipologia",
+                allowClear: true
+            });
+
+            $('#altezza_cassone').select2({
+                placeholder: "Seleziona un'altezza",
+                allowClear: true
+            });
+        });
+    </script>
+</body>
+
+</html>

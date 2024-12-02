@@ -438,6 +438,107 @@ def modifica_impianto(impianto_id):
     return render_template('modifica_impianto.html', impianto=impianto)
 
 
+# Lista cassoni
+@app.route('/cassoni', methods=['GET'])
+def lista_cassoni():
+    query = request.args.get('query', '')
+    conn = get_db_connection()
+
+    if query:
+        cassoni = conn.execute('''
+            SELECT * FROM cassoni WHERE
+            nome_cliente LIKE ? OR
+            cantiere_destinazione LIKE ? OR
+            tipologia_cassone LIKE ? OR
+            altezza_cassone LIKE ?
+        ''', ('%' + query + '%',) * 4).fetchall()
+    else:
+        cassoni = conn.execute('SELECT * FROM cassoni').fetchall()
+
+    conn.close()
+
+    # Convertire le date in oggetti datetime
+    cassoni_formattati = []
+    for cassone in cassoni:
+        cassone = dict(cassone)
+        cassone['data_consegna'] = convert_date(cassone.get('data_consegna'))
+        cassone['data_ritiro'] = convert_date(cassone.get('data_ritiro'))
+        cassoni_formattati.append(cassone)
+
+    return render_template('lista_cassoni.html', cassoni=cassoni_formattati, query=query)
+
+@app.route('/aggiungi_cassone', methods=['GET', 'POST'])
+def aggiungi_cassone():
+    conn = get_db_connection()
+    produttori = conn.execute('SELECT * FROM produttori').fetchall()
+    conn.close()
+
+    if request.method == 'POST':
+        nome_cliente = request.form['nome_cliente']
+        cantiere_destinazione = request.form['cantiere_destinazione']
+        tipologia_cassone = request.form['tipologia_cassone']
+        altezza_cassone = request.form['altezza_cassone']
+        data_consegna = request.form['data_consegna']
+        data_ritiro = request.form.get('data_ritiro')
+        nome_referente = request.form['nome_referente']
+        numero_telefono = request.form['numero_telefono']
+
+        conn = get_db_connection()
+        conn.execute('''
+            INSERT INTO cassoni (nome_cliente, cantiere_destinazione, tipologia_cassone, altezza_cassone,
+                                 data_consegna, data_ritiro, nome_referente, numero_telefono)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (nome_cliente, cantiere_destinazione, tipologia_cassone, altezza_cassone,
+              data_consegna, data_ritiro, nome_referente, numero_telefono))
+        conn.commit()
+        conn.close()
+
+        flash('Cassone aggiunto con successo!', 'success')
+        return redirect(url_for('lista_cassoni'))
+
+    # Passa la lista dei produttori al template
+    return render_template('aggiungi_cassone.html', produttori=produttori)
+
+@app.route('/modifica_cassone/<int:cassone_id>', methods=['GET', 'POST'])
+def modifica_cassone(cassone_id):
+    conn = get_db_connection()
+    cassone = conn.execute('SELECT * FROM cassoni WHERE id = ?', (cassone_id,)).fetchone()
+    produttori = conn.execute('SELECT * FROM produttori').fetchall()
+
+    if not cassone:
+        conn.close()
+        return 'Cassone non trovato', 404
+
+    if request.method == 'POST':
+        nome_cliente = request.form['nome_cliente']
+        cantiere_destinazione = request.form['cantiere_destinazione']
+        tipologia_cassone = request.form['tipologia_cassone']
+        altezza_cassone = request.form['altezza_cassone']
+        data_consegna = request.form['data_consegna']
+        data_ritiro = request.form.get('data_ritiro')
+        nome_referente = request.form['nome_referente']
+        numero_telefono = request.form['numero_telefono']
+
+        conn.execute('''
+            UPDATE cassoni SET nome_cliente = ?, cantiere_destinazione = ?, tipologia_cassone = ?,
+                               altezza_cassone = ?, data_consegna = ?, data_ritiro = ?, 
+                               nome_referente = ?, numero_telefono = ?
+            WHERE id = ?
+        ''', (nome_cliente, cantiere_destinazione, tipologia_cassone, altezza_cassone,
+              data_consegna, data_ritiro, nome_referente, numero_telefono, cassone_id))
+        conn.commit()
+        conn.close()
+
+        flash('Cassone modificato con successo!', 'success')
+        return redirect(url_for('lista_cassoni'))
+
+    cassone = dict(cassone)
+    cassone['data_consegna'] = convert_date(cassone.get('data_consegna'))
+    cassone['data_ritiro'] = convert_date(cassone.get('data_ritiro'))
+
+    conn.close()
+    return render_template('modifica_cassone.html', cassone=cassone, produttori=produttori)
+
 
 # Ricerca documenti
 @app.route('/search', methods=['GET'])
@@ -509,6 +610,20 @@ def delete_produttori():
         flash('Nessun produttore selezionato per l\'eliminazione', 'warning')
 
     return redirect(url_for('lista_produttori'))
+
+@app.route('/elimina_cassone', methods=['POST'])
+def elimina_cassone():
+    cassone_ids = request.form.getlist('cassone_ids')
+    if cassone_ids:
+        conn = get_db_connection()
+        query = 'DELETE FROM cassoni WHERE id IN ({})'.format(','.join('?' for _ in cassone_ids))
+        conn.execute(query, cassone_ids)
+        conn.commit()
+        conn.close()
+        flash('Cassoni eliminati con successo!', 'success')
+    else:
+        flash('Nessun cassone selezionato per l\'eliminazione.', 'warning')
+    return redirect(url_for('lista_cassoni'))
 
 if __name__ == '__main__':
     # Utilizzo di HTTPS con un certificato autofirmato

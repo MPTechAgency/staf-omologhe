@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista Cassoni</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            background-color: #ffffff;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .header img {
+            height: 50px;
+            margin-right: 20px;
+        }
+
+        .header h1 {
+            margin: 0;
+            color: #333;
+            font-size: 24px;
+        }
+
+        .header a {
+            text-decoration: none;
+            color: white;
+            background-color: #4CAF50;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .header a:hover {
+            background-color: #45a049;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th,
+        td {
+            padding: 10px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        button {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #e53935;
+        }
+
+        .edit-button {
+            background-color: #FFEB3B;
+            color: black;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            display: inline-block;
+        }
+
+        .edit-button:hover {
+            background-color: #FBC02D;
+        }
+
+        /* Stilizzazione per il form di ricerca */
+        .search-form {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .search-form input[type="text"] {
+            padding: 8px;
+            width: 60%;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .search-form button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .search-form button:hover {
+            background-color: #45a049;
+        }
+    </style>
+
+    <script>
+        // Funzione per selezionare/deselezionare tutte le checkbox
+        function toggleSelectAll(source) {
+            const checkboxes = document.querySelectorAll('.cassone-checkbox');
+            checkboxes.forEach((checkbox) => {
+                checkbox.checked = source.checked;
+            });
+        }
+    </script>
+</head>
+
+<body>
+
+    <!-- Barra superiore con il logo e il pulsante Home -->
+    <div class="header">
+        <div style="display: flex; align-items: center;">
+            <img src="{{ url_for('static', filename='logo_staf_piccolo.jpg') }}" alt="Logo">
+            <h1>Lista Cassoni</h1>
+        </div>
+        <a href="{{ url_for('home') }}">Torna alla Homepage</a>
+    </div>
+
+    <!-- Contenuto principale della pagina -->
+    <div class="container">
+        <!-- Form di ricerca -->
+        <form method="GET" action="{{ url_for('lista_cassoni') }}" class="search-form">
+            <input type="text" name="query" value="{{ query }}"
+                placeholder="Cerca per Cliente, Cantiere, Tipologia, Referente">
+            <button type="submit">Cerca</button>
+        </form>
+
+        <!-- Tabella dei cassoni -->
+        <form method="POST" action="{{ url_for('elimina_cassone') }}">
+            <table>
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" onclick="toggleSelectAll(this)"></th>
+                        <th>Nome Cliente</th>
+                        <th>Cantiere Destinazione</th>
+                        <th>Tipologia Cassone</th>
+                        <th>Altezza Cassone</th>
+                        <th>Data Consegna</th>
+                        <th>Data Ritiro</th>
+                        <th>Nome Referente</th>
+                        <th>Numero Telefono</th>
+                        <th>Azioni</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if cassoni %}
+                    {% for cassone in cassoni %}
+                    <tr>
+                        <td><input type="checkbox" name="cassone_ids" value="{{ cassone.id }}" class="cassone-checkbox">
+                        </td>
+                        <td>{{ cassone.nome_cliente }}</td>
+                        <td>{{ cassone.cantiere_destinazione }}</td>
+                        <td>{{ cassone.tipologia_cassone }}</td>
+                        <td>{{ cassone.altezza_cassone }}</td>
+                        <td>{{ cassone.data_consegna.strftime('%d-%m-%Y') }}</td>
+                        <td>
+                            {% if cassone.data_ritiro %}
+                            {{ cassone.data_ritiro.strftime('%d-%m-%Y') }}
+                            {% else %}
+                            Non definita
+                            {% endif %}
+                        </td>
+                        <td>{{ cassone.nome_referente }}</td>
+                        <td>{{ cassone.numero_telefono }}</td>
+                        <td>
+                            <a href="{{ url_for('modifica_cassone', cassone_id=cassone.id) }}"
+                                class="edit-button">Modifica</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="10" style="text-align: center;">Nessun cassone trovato.</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+
+            <br>
+
+            <button type="submit">Elimina Selezionati</button>
+        </form>
+    </div>
+
+</body>
+
+</html>

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modifica Cassone</title>
+    <style>
+        /* Stili generali */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            background-color: #ffffff;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .header img {
+            height: 50px;
+            margin-right: 20px;
+        }
+
+        .header h1 {
+            margin: 0;
+            color: #333;
+            font-size: 24px;
+        }
+
+        .header a {
+            text-decoration: none;
+            color: white;
+            background-color: #4CAF50;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .header a:hover {
+            background-color: #45a049;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        select,
+        input[type="text"],
+        input[type="date"] {
+            width: 99%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .form-row {
+            margin-bottom: 20px;
+        }
+
+        /* Modifiche ai pulsanti */
+        .edit-button {
+            background-color: #FFEB3B;
+            color: black;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .edit-button:hover {
+            background-color: #FBC02D;
+        }
+    </style>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+</head>
+
+<body>
+
+    <div class="header">
+        <div style="display: flex; align-items: center;">
+            <img src="{{ url_for('static', filename='logo_staf_piccolo.jpg') }}" alt="Logo">
+            <h1>Modifica Cassone</h1>
+        </div>
+        <a href="{{ url_for('home') }}">Torna alla Homepage</a>
+    </div>
+
+    <div class="container">
+        <form method="POST">
+            <!-- Campo per selezionare il cliente -->
+            <div class="form-group">
+                <label for="nome_cliente">Cliente</label>
+                <select name="nome_cliente" id="nome_cliente" required>
+                    <option value="">Seleziona un cliente</option>
+                    {% for produttore in produttori %}
+                    <option value="{{ produttore['nome_produttore'] }}" {% if
+                        produttore['nome_produttore']==cassone['nome_cliente'] %} selected {% endif %}>
+                        {{ produttore['nome_produttore'] }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Campo per inserire il cantiere di destinazione -->
+            <div class="form-row">
+                <label for="cantiere_destinazione">Cantiere Destinazione</label>
+                <input type="text" id="cantiere_destinazione" name="cantiere_destinazione"
+                    value="{{ cassone['cantiere_destinazione'] }}" required>
+            </div>
+
+            <!-- Campo per selezionare la tipologia di cassone -->
+            <div class="form-group">
+                <label for="tipologia_cassone">Tipologia Cassone</label>
+                <select name="tipologia_cassone" id="tipologia_cassone" required>
+                    <option value="">Seleziona una tipologia</option>
+                    <option value="Grande" {% if cassone['tipologia_cassone']=='Grande' %} selected {% endif %}>Grande
+                    </option>
+                    <option value="Piccolo" {% if cassone['tipologia_cassone']=='Piccolo' %} selected {% endif %}>
+                        Piccolo</option>
+                    <option value="3/4" {% if cassone['tipologia_cassone']=='3/4' %} selected {% endif %}>3/4</option>
+                </select>
+            </div>
+
+            <!-- Campo per selezionare l'altezza del cassone -->
+            <div class="form-group">
+                <label for="altezza_cassone">Altezza Cassone</label>
+                <select name="altezza_cassone" id="altezza_cassone" required>
+                    <option value="">Seleziona un'altezza</option>
+                    <option value="Basso" {% if cassone['altezza_cassone']=='Basso' %} selected {% endif %}>Basso
+                    </option>
+                    <option value="Alto" {% if cassone['altezza_cassone']=='Alto' %} selected {% endif %}>Alto</option>
+                    <option value="Alto c/Cop" {% if cassone['altezza_cassone']=='Alto c/Cop' %} selected {% endif %}>
+                        Alto c/Cop</option>
+                </select>
+            </div>
+
+            <!-- Campo per la data di consegna -->
+            <div class="form-row">
+                <label for="data_consegna">Data Consegna</label>
+                <input type="date" id="data_consegna" name="data_consegna"
+                    value="{{ cassone['data_consegna'].strftime('%Y-%m-%d') }}" required>
+            </div>
+
+            <!-- Campo per la data di ritiro -->
+            <div class="form-row">
+                <label for="data_ritiro">Data Ritiro (opzionale)</label>
+                <input type="date" id="data_ritiro" name="data_ritiro"
+                    value="{{ cassone['data_ritiro'].strftime('%Y-%m-%d') if cassone['data_ritiro'] else '' }}">
+            </div>
+
+            <!-- Campo per il nome del referente -->
+            <div class="form-row">
+                <label for="nome_referente">Nome Referente</label>
+                <input type="text" id="nome_referente" name="nome_referente" value="{{ cassone['nome_referente'] }}"
+                    required>
+            </div>
+
+            <!-- Campo per il numero di telefono del referente -->
+            <div class="form-row">
+                <label for="numero_telefono">Numero Telefono</label>
+                <input type="text" id="numero_telefono" name="numero_telefono" value="{{ cassone['numero_telefono'] }}"
+                    required>
+            </div>
+
+            <button type="submit">Aggiorna</button>
+        </form>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#nome_cliente').select2();
+            $('#tipologia_cassone').select2();
+            $('#altezza_cassone').select2();
+        });
+    </script>
+
+</body>
+
+</html>
