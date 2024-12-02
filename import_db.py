@@ -1,5 +1,6 @@
 import sqlite3
 import json
+import os
 
 NEW_DATABASE = 'new_database.db'
 IMPORT_FILE = 'database_export.json'
